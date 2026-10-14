@@ -22,11 +22,11 @@ const {
 } = Astro.props;
 ---
 
-<div class="event-card mockup-window bg-base-100 border border-base-300 w-25% m-[10vh]">
+<div class="event-card mockup-window bg-base-100 border border-base-300 w-25% mx-[5vh] my-[2vh]">
   <!-- Horizontal layout for photos and description/title -->
   <div class="flex flex-col max-w-20% md:flex-row items-left justify-left gap-6 p-6 md:p-8">
     <!-- Photo Stack Container with button layered on top of photos -->
-    <div class="relative w-[30vh] h-[20vh] shrink-0">
+    <div class="relative max-w-[60vh] max-h-[40vh] shrink-0">
       <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
         {imgs.map((img) => (
           <img
