@@ -3,11 +3,11 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-	<div class="hero bg-base-200 min-h-screen">
+	<div class="hero bg-base-200 min-h-[80vh]">
 		<div class="hero-content flex-col lg:flex-row">
 			<img
 			alt="Tailwind CSS hero component"
-			src="/public/assets/GITInit.png"
+			src="/assets/GITInit.png"
 			class="max-w-sm rounded-lg shadow-2xl"
 			/>
 			<div>
@@ -21,7 +21,24 @@ import Layout from '../layouts/Layout.astro';
 		</div>
 	</div>
 	<!-- About us -->
-	<div>
-		
+	<div min-h-[50vh] h-[50vh] max-h-screen>
+		<div class="text-center">
+			<h1 class="text-5xl">About us</h1>
+		</div>
+		<div class="text-justify mx-20">
+			<p>
+				SUO Girls in Tech at UBCO provides an inclusive and welcoming space for diversity in technology. We are a student chapter of the Association for Computing Machinery's Council on Women in Computing (ACM-W), located at the University of British Columbia's Okanagan Campus.
+			</p>
+			<p>
+				Throughout the school year, we will be hosting a variety of events for students including career prep activities like resume and LinkedIn reviews, fun socials where we can connect with other students and professionals in the technology field, worshops and programs to build your technical skills, and more! 
+			</p>
+			<h2 class="">
+				We look forward to meeting you and supporting your tech career!
+			</h2>
+		</div>
 	</div>
+	<!-- FeaturedEvent component insert -->
+	 <div class="min-h-[50vh]">
+		<p>awesome</p>
+	 </div>
 </Layout>
