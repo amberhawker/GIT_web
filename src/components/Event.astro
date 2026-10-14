@@ -1,0 +1,72 @@
+---
+import '../styles/global.css';
+
+interface Img {
+  path: string;
+  alt?: string;
+}
+
+interface Props {
+  eventTitle?: string;
+  imgs?: Array<Img>;
+  description?: string;
+}
+
+const {
+  eventTitle = "Girls in Tech",
+  imgs = [
+    { path: '/assets/animatedgit.gif', alt: "animated git logo" },
+    { path: '/assets/GITInit.png', alt: "git logo" }
+  ],
+  description = "we are awesome"
+} = Astro.props;
+---
+
+<div class="event-card mockup-window bg-base-100 border border-base-300 w-full">
+  <!-- Horizontal layout for photos and description/title -->
+  <div class="flex flex-col md:flex-row items-center justify-center gap-6 p-6 md:p-8">
+    <!-- Photo Stack Container with button layered on top of photos -->
+    <div class="relative w-[30vh] h-[20vh] shrink-0">
+      <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
+        {imgs.map((img) => (
+          <img
+            alt={img.alt}
+            src={img.path}
+            class="rounded-box w-full h-full object-cover"
+          />
+        ))}
+      </div>
+
+      <!-- Button layered directly on top of the photos -->
+      <button 
+        type="button" 
+        class="next-btn btn btn-primary btn-sm absolute bottom-2 right-2 z-20 shadow-md"
+        aria-label="Next photo"
+      >
+        ❯
+      </button>
+    </div>
+
+    <div class="divider divider-horizontal hidden md:flex"></div>
+
+    <!-- Title and Description horizontal to the photos -->
+    <div class="flex flex-col justify-center text-left max-w-md">
+      <h3 class="text-3xl font-bold mb-2">{eventTitle}</h3>
+      <p class="text-base text-base-content/80 leading-relaxed">{description}</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.event-card').forEach((card) => {
+    const stack = card.querySelector('.photo-stack');
+    const nextBtn = card.querySelector('.next-btn');
+
+    nextBtn?.addEventListener('click', () => {
+      if (stack && stack.firstElementChild) {
+        // Move the top photo to the end of the stack to reveal the next one
+        stack.appendChild(stack.firstElementChild);
+      }
+    });
+  });
+</script>
