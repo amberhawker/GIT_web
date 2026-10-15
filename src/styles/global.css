@@ -2,6 +2,25 @@
 @plugin "daisyui";
 
 /* ==========================================================================
+   Base Colors - Soft, Girly Pink Palette
+   ========================================================================== */
+@theme {
+  --color-base-100: #fff0f5;
+  --color-base-200: #fce7f3;
+  --color-base-300: #fbcfe8;
+  --color-base-content: #4a1d30;
+}
+
+:root,
+[data-theme],
+[data-theme="light"] {
+  --color-base-100: #fff0f5;
+  --color-base-200: #fce7f3;
+  --color-base-300: #fbcfe8;
+  --color-base-content: #4a1d30;
+}
+
+/* ==========================================================================
    Windows XP Luna Theme Mockup Window
    Transforms all DaisyUI .mockup-window components into Windows XP style windows
    ========================================================================== */
@@ -40,7 +59,7 @@
   align-self: auto !important;
   display: flex !important;
   align-items: center !important;
-  padding-left: 28px !important;
+  padding-left: 56px !important;
   padding-right: 76px !important;
   color: #ffffff !important;
   font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif !important;
@@ -55,7 +74,7 @@
   border-bottom: 1px solid #00227b !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 2.5 C3.5 1.8 5 2.8 7 2.2 L7 7.5 C5 8 3.5 7 1.5 7.8 Z' fill='%23eb421d'/%3E%3Cpath d='M8 2 C10 1.2 11.5 2.2 14.5 1.5 L14.5 6.8 C11.5 7.5 10 6.5 8 7.2 Z' fill='%236bbd1c'/%3E%3Cpath d='M1.5 8.8 C3.5 8 5 9 7 8.5 L7 13.8 C5 14.3 3.5 13.3 1.5 14 Z' fill='%231976ea'/%3E%3Cpath d='M8 8.2 C10 7.5 11.5 8.5 14.5 7.8 L14.5 13 C11.5 13.8 10 12.8 8 13.5 Z' fill='%23fdb813'/%3E%3C/svg%3E"),
+    url("/assets/GITTransparent.png"),
     linear-gradient(
       180deg,
       #0058ee 0%,
@@ -70,7 +89,7 @@
     ) !important;
   background-repeat: no-repeat, no-repeat !important;
   background-position: 7px center, 0 0 !important;
-  background-size: 16px 16px, 100% 100% !important;
+  background-size: auto 18px, 100% 100% !important;
   z-index: 10 !important;
   box-sizing: border-box !important;
 }
