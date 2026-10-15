@@ -5,7 +5,6 @@ import Sponsor from '../components/Sponsor.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import gitLogo from '../assets/GITTransparentCrop.png';
-
 const allEvents = await getCollection("events");
 const featured = allEvents.filter(event => event.data.featured == true);
 const sponsors = await getCollection("sponsors");
@@ -20,7 +19,9 @@ const sponsors = await getCollection("sponsors");
 				class="max-w-lg w-full"
 			/>
 			<div>
-			<h1 class="text-5xl font-bold">Girls in Tech!</h1>
+				<div class="awesome-title">
+					<h1 class="text-5xl font-bold">Girls in Tech!</h1>
+				</div>
 			<h2>University of British Columbia - Okanagan</h2>
 			<p class="py-6">
 				We aim to address the breach between girls in technology-related fields and the opportunities available for them.
@@ -136,10 +137,35 @@ const sponsors = await getCollection("sponsors");
 </Layout>
 
 <script>
-	import { animate, onScroll } from 'animejs';
+	import { animate, createTimeline, onScroll, stagger, splitText } from 'animejs';
 
-	const setupAboutAnimations = () => {
+	const setupAnimations = () => {
 		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		// 1. awesome-title bouncing characters animation
+		const titleElement = document.querySelector<HTMLElement>('.awesome-title h1');
+		if (titleElement && !prefersReducedMotion) {
+			const titleChars = splitText(titleElement, { words: false, chars: true });
+			if (titleChars && titleChars.chars && titleChars.chars.length) {
+				animate(titleChars.chars, {
+					translateY: [
+						{ to: '-2.75rem', ease: 'outExpo', duration: 550 },
+						{ to: '0rem', ease: 'outBounce', duration: 750 }
+					],
+					rotate: {
+						from: '-1turn',
+						to: '0turn',
+						duration: 700,
+						ease: 'outExpo',
+					},
+					delay: stagger(60),
+					loopDelay: 2000,
+					loop: true,
+				});
+			}
+		}
+
+		// 2. About section animation with createTimeline + onScroll
 		const aboutSection = document.getElementById('about-us');
 		if (!aboutSection) return;
 
@@ -157,44 +183,45 @@ const sponsors = await getCollection("sponsors");
 			return;
 		}
 
-		// Cinematic reveal for the section header
+		// Section header timeline createTimeline
 		if (header) {
-			animate(header, {
+			const headerTl = createTimeline({
+				autoplay: onScroll({
+					target: header,
+					enter: '85% top',
+					leave: '15% bottom',
+					sync: 'play reverse',
+				}),
+				defaults: {
+					ease: 'outExpo',
+				},
+			});
+
+			headerTl.add(header, {
 				opacity: [0, 1],
 				translateY: [40, 0],
 				filter: ['blur(10px)', 'blur(0px)'],
 				duration: 900,
-				ease: 'outExpo',
-				autoplay: onScroll({
-					target: header,
-					enter: '85% top',
-					leave: '15% bottom',
-					sync: 'play reverse',
-				}),
 			});
+
+			if (headerLine) {
+				headerTl.add(
+					headerLine,
+					{
+						scaleX: [0, 1],
+						opacity: [0, 1],
+						duration: 800,
+					},
+					'-=600'
+				);
+			}
 		}
 
-		if (headerLine) {
-			animate(headerLine, {
-				scaleX: [0, 1],
-				opacity: [0, 1],
-				duration: 800,
-				delay: 200,
-				ease: 'outExpo',
-				autoplay: onScroll({
-					target: header,
-					enter: '85% top',
-					leave: '15% bottom',
-					sync: 'play reverse',
-				}),
-			});
-		}
-
-		// Vertical progress track draws smoothly linked to scroll
+		// Vertical progress track linked to scroll scrubbing
 		if (progressLine) {
 			animate(progressLine, {
 				scaleY: [0, 1],
-				opacity: [0.1, 0.6],
+				opacity: [0.1, 0.7],
 				duration: 1000,
 				ease: 'linear',
 				autoplay: onScroll({
@@ -206,88 +233,82 @@ const sponsors = await getCollection("sponsors");
 			});
 		}
 
-		// Each paragraph piece glides in cinematically with 3D tilt, blur rack focus, and scale
+		// Each paragraph piece orchestrated with createTimeline
 		pieces.forEach((piece) => {
 			const badge = piece.querySelector<HTMLElement>('.about-piece-badge');
 			const line = piece.querySelector<HTMLElement>('.about-piece-line');
 			const node = piece.querySelector<HTMLElement>('.rounded-full');
 
-			// Main card animation: 3D perspective glide, rack focus blur clear, smooth scale & opacity
-			animate(piece, {
-				opacity: [0, 1],
-				translateY: [60, 0],
-				rotateX: [10, 0],
-				scale: [0.93, 1],
-				filter: ['blur(12px)', 'blur(0px)'],
-				duration: 1000,
-				ease: 'outExpo',
+			const pieceTl = createTimeline({
 				autoplay: onScroll({
 					target: piece,
 					enter: '85% top',
 					leave: '15% bottom',
 					sync: 'play reverse',
 				}),
+				defaults: {
+					ease: 'outExpo',
+				},
 			});
 
-			// Staggered cinematic micro-reveal for metadata badge
-			if (badge) {
-				animate(badge, {
-					opacity: [0, 1],
-					translateX: [-20, 0],
-					duration: 700,
-					delay: 150,
-					ease: 'outCubic',
-					autoplay: onScroll({
-						target: piece,
-						enter: '85% top',
-						leave: '15% bottom',
-						sync: 'play reverse',
-					}),
-				});
-			}
+			// Main card 3D rack-focus glide
+			pieceTl.add(piece, {
+				opacity: [0, 1],
+				translateY: [55, 0],
+				rotateX: [10, 0],
+				scale: [0.93, 1],
+				filter: ['blur(12px)', 'blur(0px)'],
+				duration: 950,
+			});
 
-			// Decorative underline unfolds
-			if (line) {
-				animate(line, {
-					scaleX: [0, 1],
-					opacity: [0, 1],
-					duration: 750,
-					delay: 200,
-					ease: 'outExpo',
-					autoplay: onScroll({
-						target: piece,
-						enter: '85% top',
-						leave: '15% bottom',
-						sync: 'play reverse',
-					}),
-				});
-			}
-
-			// Track node pop on enter
+			// Track node pop
 			if (node) {
-				animate(node, {
-					scale: [0.4, 1],
-					opacity: [0, 1],
-					duration: 600,
-					delay: 100,
-					ease: 'outBack(2)',
-					autoplay: onScroll({
-						target: piece,
-						enter: '85% top',
-						leave: '15% bottom',
-						sync: 'play reverse',
-					}),
-				});
+				pieceTl.add(
+					node,
+					{
+						scale: [0.3, 1],
+						opacity: [0, 1],
+						duration: 600,
+						ease: 'outBack(2)',
+					},
+					'-=800'
+				);
+			}
+
+			// Subtitle badge slide-in
+			if (badge) {
+				pieceTl.add(
+					badge,
+					{
+						opacity: [0, 1],
+						translateX: [-18, 0],
+						duration: 700,
+					},
+					'-=700'
+				);
+			}
+
+			// Underline unfold
+			if (line) {
+				pieceTl.add(
+					line,
+					{
+						scaleX: [0, 1],
+						opacity: [0, 1],
+						duration: 750,
+					},
+					'-=650'
+				);
 			}
 		});
 	};
 
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', setupAboutAnimations);
+		document.addEventListener('DOMContentLoaded', setupAnimations);
 	} else {
-		setupAboutAnimations();
+		setupAnimations();
 	}
-	document.addEventListener('astro:page-load', setupAboutAnimations);
+	document.addEventListener('astro:page-load', setupAnimations);
 </script>
 
 <style>
@@ -299,5 +320,11 @@ const sponsors = await getCollection("sponsors");
 	.about-piece {
 		transform-style: preserve-3d;
 		will-change: transform, opacity, filter;
+	}
+
+	.awesome-title :global([data-char]),
+	.awesome-title :global(span) {
+		display: inline-block;
+		will-change: transform;
 	}
 </style>
