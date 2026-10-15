@@ -49,4 +49,18 @@ const links = defineCollection({
     })
 });
 
-export const collections = { events, execs, links };
+const sponsors = defineCollection({
+    loader: glob({
+        pattern: '**/*.json',
+        base: './src/data/sponsors'
+    }),
+    schema: z.object({
+        name: z.string(),
+        description: z.string(),
+        img: z.string(),
+        address: z.string().default(""),
+        contact: z.string().default("")
+    })
+})
+
+export const collections = { events, execs, links, sponsors };

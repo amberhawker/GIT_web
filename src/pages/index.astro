@@ -8,6 +8,7 @@ import gitLogo from '../assets/GITTransparentCrop.png';
 
 const allEvents = await getCollection("events");
 const featured = allEvents.filter(event => event.data.featured == true);
+const sponsors = await getCollection("sponsors");
 ---
 
 <Layout>
@@ -53,6 +54,18 @@ const featured = allEvents.filter(event => event.data.featured == true);
 				eventTitle = {event.data.title}
 				imgs = {event.data.imgs}
 				description = {event.data.description}
+			/>
+		))}
+	 </div>
+	 <!-- Sponsor block -->
+	 <div>
+		{sponsors.map((sponsor) => (
+			<Sponsor
+				name = {sponsor.data.name}
+				description = {sponsor.data.description}
+				img = {sponsor.data.img}
+				address = {sponsor.data.address}
+				contact = {sponsor.data.contact}
 			/>
 		))}
 	 </div>
