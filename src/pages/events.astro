@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Event from '../components/Event.astro';
+
+import { getCollection } from 'astro:content';
+
+const allEvents = await getCollection("events");
+---
+
+<Layout>
+    <div>
+        <div>
+            <!--has the start of the page -->
+        </div>
+        <div>
+            {allEvents.map((event) => (
+                <Event
+                    eventTitle={event.data.title}
+                    imgs={event.data.imgs}
+                    description={event.data.description}
+                />
+            ))}
+        </div>
+    </div>
+</Layout>
