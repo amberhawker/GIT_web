@@ -1,8 +1,9 @@
 ---
+import { Image } from 'astro:assets';
 
 interface Img {
   path: string;
-  alt: string;
+  alt?: string;
 }
 
 interface Props {
@@ -25,12 +26,14 @@ const {
   <!-- Horizontal layout for photos and description/title -->
   <div class="flex flex-col max-w-20% md:flex-row items-left justify-left gap-6 p-6 md:p-8">
     <!-- Photo Stack Container with button layered on top of photos -->
-    <div class="relative max-w-[60vh] max-h-[40vh] shrink-0">
+    <div class="relative w-full md:w-[60vh] max-w-[60vh] aspect-[3/2] shrink-0">
       <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
         {imgs.map((img) => (
-          <img
-            alt={img.alt}
+          <Image
+            alt={img.alt || eventTitle}
             src={img.path}
+            width={600}
+            height={400}
             class="rounded-box w-full h-full object-cover"
           />
         ))}

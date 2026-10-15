@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Event from '../components/Event.astro';
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 
 const allEvents = await getCollection("events");
 const featured = allEvents.filter(event => event.data.featured == true);
@@ -10,10 +11,12 @@ const featured = allEvents.filter(event => event.data.featured == true);
 <Layout>
 	<div class="hero bg-base-200 min-h-[80vh]">
 		<div class="hero-content flex-col lg:flex-row">
-			<img
-			alt="Tailwind CSS hero component"
-			src="/assets/GITInit.png"
-			class="max-w-sm rounded-lg shadow-2xl"
+			<Image
+				alt="Girls in Tech UBC Okanagan"
+				src="/assets/GITInit.png"
+				width={400}
+				height={400}
+				class="max-w-sm w-full aspect-square object-cover rounded-lg shadow-2xl"
 			/>
 			<div>
 			<h1 class="text-5xl font-bold">Girls in Tech!</h1>
