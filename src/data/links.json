@@ -1,0 +1,29 @@
+[
+    {
+        "id": "Linktree",
+        "href": "https://linktr.ee/suogit"
+    },
+    {
+        "id": "Discord Invite",
+        "href": "https://discord.com/invite/s9JtA2caGd"
+    },
+    {
+        "id": "Rubric Registration",
+        "href": "https://campus.hellorubric.com/?tab=memberships&s=9514"
+    },
+    {
+        "id": "Instagram",
+        "href": "https://www.instagram.com/girls.in.tech/",
+        "ico": {"src": "instagram", "bg": "FE005C"}
+    },
+    {
+        "id": "LinkedIn",
+        "href": "https://www.linkedin.com/company/ubcogit/home/",
+        "ico": {"src": "linkedin", "bg": "2867B2"}
+    },
+    {
+        "id": "Facebook",   
+        "href": "https://www.facebook.com/suogit/",
+        "ico": {"src": "facebook", "bg": "1877F2"}
+    }
+]

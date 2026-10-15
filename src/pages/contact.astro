@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allLinks = await getCollection("links");
+
+type LinkEntry = (typeof allLinks)[number];
+type LinkWithIcon = LinkEntry & {
+    data: LinkEntry['data'] & {
+        ico: NonNullable<LinkEntry['data']['ico']>;
+    };
+};
+
+const buttons = allLinks.filter(link => link.data.ico === undefined);
+const icos = allLinks.filter((link): link is LinkWithIcon => link.data.ico !== undefined);
+
+---
+
+<Layout>
+    <div>
+        <h1 class="text-5xl text-center mb-8">Interested?</h1>
+        <div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-6 p-4 md:p-8">
+            <div class="flex-1 text-center">
+                <p>Feel Free to reach out to us anytime! We are here to help and make you feel a part of UBCO!!</p>
+            </div>
+            <div class="divider md:divider-horizontal"></div>
+            <div class="flex-1">
+                <p>hey bro</p>
+                {buttons.map((link) => (
+                    <a href={link.data.href}>{link.data.id}</a>
+                    <br/>
+                ))}
+                <div class="flex gap-3 my-4">
+                    {icos.map((link) => (
+                        <a
+                            href={link.data.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center justify-center w-10 h-10 rounded-full overflow-hidden hover:opacity-85 transition-opacity"
+                            style={`background-color: #${link.data.ico.bg.replace(/^#/, '')};`}
+                        >
+                            <img
+                                src={"/assets/icons/" + link.data.ico.src + ".png"}
+                                alt={link.data.id + " icon"}
+                                class="w-full h-full object-contain"
+                            />
+                        </a>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+</Layout>

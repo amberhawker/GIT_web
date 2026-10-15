@@ -1,4 +1,4 @@
-import { glob } from 'astro/loaders';
+import { glob, file } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { defineCollection } from 'astro:content';
 
@@ -35,6 +35,18 @@ const execs = defineCollection({
         description: z.string()
 
     })
-})
+});
 
-export const collections = { events, execs };
+const links = defineCollection({
+    loader: file("src/data/links.json"),
+    schema: z.object({
+        id: z.string(),
+        href: z.string(),
+        ico: z.object({
+            src: z.string(),
+            bg: z.string()
+        }).optional()
+    })
+});
+
+export const collections = { events, execs, links };
