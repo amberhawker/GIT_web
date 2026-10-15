@@ -13,7 +13,7 @@ const events = defineCollection({
             z.object({
                 path: z.string(),
                 alt: z.string().optional(),
-            })
+            }).default({path: '/assets/events/placeholder.png', alt: 'placeholder event img'})
         ),
         description: z.string().optional(),
         date: z.string().optional(),
