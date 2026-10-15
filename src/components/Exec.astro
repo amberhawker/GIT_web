@@ -1,0 +1,40 @@
+---
+
+interface Props {
+  role: string,
+  name: string,
+  img: string,
+  degree: string,
+  description: string
+}
+
+const {
+  role = "",
+  name = "",
+  img = "/assets/execs/placeholder.jpg",
+  degree = "",
+  description = ""
+} = Astro.props;
+
+---
+
+<div class="event-card mockup-window bg-base-100 border border-base-300 w-10% mx-[2vh] my-[2vh]">
+    <div class="flex flex-col max-w-20% md:flex-row items-left justify-left gap-6 p-6 md:p-8">
+        <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
+            <img
+                alt={name}
+                src={img}
+                class="w-full h-full"
+            />
+        </div>
+        <div class="flex flex-col justify-center text-left max-w-100%">
+            <h3 class="text-3xl font-bold mb-2">{role}</h3>
+            <p class="font-bold">{name}</p>
+            <p class="text-base text-base-content/80 leading-relaxed">
+                {degree}
+                <br/>
+                {description}
+            </p>
+        </div>
+    </div>
+</div>

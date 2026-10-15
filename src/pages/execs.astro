@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Exec from '../components/Exec.astro';
+
+import { getCollection } from 'astro:content';
+const allExecs = await getCollection("execs");
+---
+
+<Layout>
+    <div>
+        <h1 class="text-5xl font-bold text-center">execs bro</h1>
+    </div>
+    <div class="grid grid-cols-3">
+        {allExecs.map((exec) => (
+            <Exec
+                role={exec.data.role},
+                name={exec.data.name},
+                img={exec.data.img},
+                degree={exec.data.degree},
+                description={exec.data.description}
+            />
+        ))}
+    </div>
+</Layout>

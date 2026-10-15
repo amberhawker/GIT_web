@@ -30,7 +30,7 @@ const execs = defineCollection({
         role: z.string(),
         name: z.string(),
         // img should be normalized to one std, web-friendly & highly compatible filetype. not required
-        img: z.string(),
+        img: z.string().default('/assets/execs/placeholder.jpg'),
         degree: z.string(),
         description: z.string()
 
