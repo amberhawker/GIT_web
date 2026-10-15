@@ -58,7 +58,8 @@ const sponsors = await getCollection("sponsors");
 		))}
 	 </div>
 	 <!-- Sponsor block -->
-	 <div>
+	 <div class="mt-[4vh]">
+		<h2 class="text-3xl text-center">Thanks to our sponsors</h2>
 		{sponsors.map((sponsor) => (
 			<Sponsor
 				name = {sponsor.data.name}
