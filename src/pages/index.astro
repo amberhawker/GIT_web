@@ -1,9 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Event from '../components/Event.astro';
+import Sponsor from '../components/Sponsor.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
-import gitLogo from '../assets/GITTransparent.png';
+import gitLogo from '../assets/GITTransparentCrop.png';
 
 const allEvents = await getCollection("events");
 const featured = allEvents.filter(event => event.data.featured == true);
