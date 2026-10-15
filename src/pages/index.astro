@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Event from '../components/Event.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
-import gitLogo from '../assets/GITInit.png';
+import gitLogo from '../assets/GITTransparent.png';
 
 const allEvents = await getCollection("events");
 const featured = allEvents.filter(event => event.data.featured == true);
@@ -15,7 +15,7 @@ const featured = allEvents.filter(event => event.data.featured == true);
 			<Image
 				alt="Girls in Tech UBC Okanagan"
 				src={gitLogo}
-				class="max-w-lg w-full rounded-lg shadow-2xl"
+				class="max-w-lg w-full"
 			/>
 			<div>
 			<h1 class="text-5xl font-bold">Girls in Tech!</h1>
