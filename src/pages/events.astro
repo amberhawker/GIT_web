@@ -13,6 +13,7 @@ const allEvents = await getCollection("events");
             <!--has the start of the page -->
         </div>
         <div>
+            <!--all events TODO: make sure they're sorted by date? Astro says it's non-deterministic -->
             {allEvents.map((event) => (
                 <Event
                     eventTitle={event.data.title}

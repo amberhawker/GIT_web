@@ -21,4 +21,20 @@ const events = defineCollection({
     }),
 });
 
-export const collections = { events };
+const execs = defineCollection({
+    loader: glob({
+        pattern: '**/*.json',
+        base: './src/data/execs'
+    }),
+    schema: z.object({
+        role: z.string(),
+        name: z.string(),
+        // img should be normalized to one std, web-friendly & highly compatible filetype. not required
+        img: z.string(),
+        degree: z.string(),
+        description: z.string()
+
+    })
+})
+
+export const collections = { events, execs };
