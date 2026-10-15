@@ -30,22 +30,89 @@ const sponsors = await getCollection("sponsors");
 		</div>
 	</div>
 	<!-- About us -->
-	<div min-h-[50vh] h-[50vh] max-h-screen>
-		<div class="text-center mt-[2vh]">
-			<h1 class="text-5xl">About us</h1>
+	<section id="about-us" class="about-us-section relative py-20 px-6 sm:px-10 lg:px-16 overflow-hidden">
+		<!-- Subtle ambient glow background -->
+		<div class="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[650px] max-w-full h-[320px] bg-gradient-to-b from-primary/15 via-secondary/10 to-transparent rounded-full blur-3xl opacity-70"></div>
+
+		<!-- Section Heading -->
+		<div class="about-header text-center mb-14 relative z-10">
+			<span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold tracking-widest uppercase bg-base-200/90 text-base-content border border-base-300 shadow-xs mb-3">
+				<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+				Chapter Mission
+			</span>
+			<h2 class="text-4xl sm:text-5xl md:text-6xl font-bold font-header tracking-tight">About us</h2>
+			<div class="about-header-line w-20 h-1 bg-primary/40 mx-auto mt-4 rounded-full"></div>
 		</div>
-		<div class="text-justify mx-20">
-			<p>
-				SUO Girls in Tech at UBCO provides an inclusive and welcoming space for diversity in technology. We are a student chapter of the Association for Computing Machinery's Council on Women in Computing (ACM-W), located at the University of British Columbia's Okanagan Campus.
-			</p>
-			<p>
-				Throughout the school year, we will be hosting a variety of events for students including career prep activities like resume and LinkedIn reviews, fun socials where we can connect with other students and professionals in the technology field, worshops and programs to build your technical skills, and more! 
-			</p>
-			<h2 class="">
-				We look forward to meeting you and supporting your tech career!
-			</h2>
+
+		<!-- Paragraph pieces container with 3D perspective -->
+		<div class="about-perspective relative max-w-4xl mx-auto z-10 flex flex-col gap-8 md:gap-10">
+			<!-- Timeline Track Line -->
+			<div class="about-progress-line absolute left-4 sm:left-6 top-6 bottom-6 w-[2px] bg-gradient-to-b from-primary via-secondary to-accent/40 rounded-full hidden md:block origin-top opacity-30"></div>
+
+			<!-- Piece 1: Community & Roots -->
+			<article class="about-piece group relative md:pl-14 transition-all duration-300">
+				<!-- Decorative Node Marker for Desktop Track -->
+				<div class="absolute left-4 sm:left-6 top-8 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-base-100 border-2 border-primary shadow-xs hidden md:flex items-center justify-center">
+					<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+				</div>
+
+				<div class="about-card p-6 sm:p-8 rounded-2xl bg-base-100/80 border border-base-300 shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:border-primary/40">
+					<div class="flex items-center justify-between gap-4 mb-4">
+						<span class="about-piece-badge font-mono text-xs font-bold tracking-wider uppercase text-primary/90 flex items-center gap-1.5">
+							<span class="opacity-60">//</span> 01 · WHO WE ARE
+						</span>
+						<span class="text-xs font-mono opacity-50">ACM-W Chapter</span>
+					</div>
+					<div class="about-piece-line w-12 h-0.5 bg-primary/40 mb-4 origin-left"></div>
+					<p class="text-base sm:text-lg leading-relaxed text-base-content/90 font-body">
+						SUO Girls in Tech at UBCO provides an inclusive and welcoming space for diversity in technology. We are a student chapter of the Association for Computing Machinery's Council on Women in Computing (ACM-W), located at the University of British Columbia's Okanagan Campus.
+					</p>
+				</div>
+			</article>
+
+			<!-- Piece 2: What We Do & Opportunities -->
+			<article class="about-piece group relative md:pl-14 transition-all duration-300">
+				<!-- Decorative Node Marker for Desktop Track -->
+				<div class="absolute left-4 sm:left-6 top-8 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-base-100 border-2 border-secondary shadow-xs hidden md:flex items-center justify-center">
+					<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+				</div>
+
+				<div class="about-card p-6 sm:p-8 rounded-2xl bg-base-100/80 border border-base-300 shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:border-secondary/40">
+					<div class="flex items-center justify-between gap-4 mb-4">
+						<span class="about-piece-badge font-mono text-xs font-bold tracking-wider uppercase text-secondary/90 flex items-center gap-1.5">
+							<span class="opacity-60">//</span> 02 · EVENTS & EMPOWERMENT
+						</span>
+						<span class="text-xs font-mono opacity-50">Skills & Network</span>
+					</div>
+					<div class="about-piece-line w-12 h-0.5 bg-secondary/40 mb-4 origin-left"></div>
+					<p class="text-base sm:text-lg leading-relaxed text-base-content/90 font-body">
+						Throughout the school year, we will be hosting a variety of events for students including career prep activities like resume and LinkedIn reviews, fun socials where we can connect with other students and professionals in the technology field, workshops and programs to build your technical skills, and more!
+					</p>
+				</div>
+			</article>
+
+			<!-- Piece 3: Concluding Invitation -->
+			<article class="about-piece group relative md:pl-14 transition-all duration-300">
+				<!-- Decorative Node Marker for Desktop Track -->
+				<div class="absolute left-4 sm:left-6 top-8 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-base-100 border-2 border-primary shadow-xs hidden md:flex items-center justify-center">
+					<div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+				</div>
+
+				<div class="about-card p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-base-100 via-base-200/50 to-base-100 border-2 border-primary/30 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:border-primary/60">
+					<div class="flex items-center justify-between gap-4 mb-4">
+						<span class="about-piece-badge font-mono text-xs font-bold tracking-wider uppercase text-primary flex items-center gap-1.5">
+							<span class="opacity-60">//</span> 03 · JOIN OUR JOURNEY
+						</span>
+						<span class="text-xs font-mono opacity-50">UBCO Community</span>
+					</div>
+					<div class="about-piece-line w-16 h-0.5 bg-primary/60 mb-4 origin-left"></div>
+					<h3 class="text-xl sm:text-2xl md:text-3xl font-header font-bold text-base-content leading-snug">
+						We look forward to meeting you and supporting your tech career!
+					</h3>
+				</div>
+			</article>
 		</div>
-	</div>
+	</section>
 	<!-- FeaturedEvent component insert -->
 	 <div class="min-h-[50vh]">
 		<h1 class="text-5xl text-center mt-[2vh]">Featured Event</h1>
@@ -71,3 +138,170 @@ const sponsors = await getCollection("sponsors");
 		))}
 	 </div>
 </Layout>
+
+<script>
+	import { animate, onScroll } from 'animejs';
+
+	const setupAboutAnimations = () => {
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const aboutSection = document.getElementById('about-us');
+		if (!aboutSection) return;
+
+		const pieces = aboutSection.querySelectorAll<HTMLElement>('.about-piece');
+		const header = aboutSection.querySelector<HTMLElement>('.about-header');
+		const headerLine = aboutSection.querySelector<HTMLElement>('.about-header-line');
+		const progressLine = aboutSection.querySelector<HTMLElement>('.about-progress-line');
+
+		if (prefersReducedMotion) {
+			pieces.forEach((p) => {
+				p.style.opacity = '1';
+				p.style.transform = 'none';
+				p.style.filter = 'none';
+			});
+			return;
+		}
+
+		// Cinematic reveal for the section header
+		if (header) {
+			animate(header, {
+				opacity: [0, 1],
+				translateY: [40, 0],
+				filter: ['blur(10px)', 'blur(0px)'],
+				duration: 900,
+				ease: 'outExpo',
+				autoplay: onScroll({
+					target: header,
+					enter: '85% top',
+					leave: '15% bottom',
+					sync: 'play reverse',
+				}),
+			});
+		}
+
+		if (headerLine) {
+			animate(headerLine, {
+				scaleX: [0, 1],
+				opacity: [0, 1],
+				duration: 800,
+				delay: 200,
+				ease: 'outExpo',
+				autoplay: onScroll({
+					target: header,
+					enter: '85% top',
+					leave: '15% bottom',
+					sync: 'play reverse',
+				}),
+			});
+		}
+
+		// Vertical progress track draws smoothly linked to scroll
+		if (progressLine) {
+			animate(progressLine, {
+				scaleY: [0, 1],
+				opacity: [0.1, 0.6],
+				duration: 1000,
+				ease: 'linear',
+				autoplay: onScroll({
+					target: aboutSection,
+					enter: '75% top',
+					leave: '25% bottom',
+					sync: 0.5,
+				}),
+			});
+		}
+
+		// Each paragraph piece glides in cinematically with 3D tilt, blur rack focus, and scale
+		pieces.forEach((piece) => {
+			const badge = piece.querySelector<HTMLElement>('.about-piece-badge');
+			const line = piece.querySelector<HTMLElement>('.about-piece-line');
+			const node = piece.querySelector<HTMLElement>('.rounded-full');
+
+			// Main card animation: 3D perspective glide, rack focus blur clear, smooth scale & opacity
+			animate(piece, {
+				opacity: [0, 1],
+				translateY: [60, 0],
+				rotateX: [10, 0],
+				scale: [0.93, 1],
+				filter: ['blur(12px)', 'blur(0px)'],
+				duration: 1000,
+				ease: 'outExpo',
+				autoplay: onScroll({
+					target: piece,
+					enter: '85% top',
+					leave: '15% bottom',
+					sync: 'play reverse',
+				}),
+			});
+
+			// Staggered cinematic micro-reveal for metadata badge
+			if (badge) {
+				animate(badge, {
+					opacity: [0, 1],
+					translateX: [-20, 0],
+					duration: 700,
+					delay: 150,
+					ease: 'outCubic',
+					autoplay: onScroll({
+						target: piece,
+						enter: '85% top',
+						leave: '15% bottom',
+						sync: 'play reverse',
+					}),
+				});
+			}
+
+			// Decorative underline unfolds
+			if (line) {
+				animate(line, {
+					scaleX: [0, 1],
+					opacity: [0, 1],
+					duration: 750,
+					delay: 200,
+					ease: 'outExpo',
+					autoplay: onScroll({
+						target: piece,
+						enter: '85% top',
+						leave: '15% bottom',
+						sync: 'play reverse',
+					}),
+				});
+			}
+
+			// Track node pop on enter
+			if (node) {
+				animate(node, {
+					scale: [0.4, 1],
+					opacity: [0, 1],
+					duration: 600,
+					delay: 100,
+					ease: 'outBack(2)',
+					autoplay: onScroll({
+						target: piece,
+						enter: '85% top',
+						leave: '15% bottom',
+						sync: 'play reverse',
+					}),
+				});
+			}
+		});
+	};
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', setupAboutAnimations);
+	} else {
+		setupAboutAnimations();
+	}
+	document.addEventListener('astro:page-load', setupAboutAnimations);
+</script>
+
+<style>
+	.about-perspective {
+		perspective: 1200px;
+		transform-style: preserve-3d;
+	}
+
+	.about-piece {
+		transform-style: preserve-3d;
+		will-change: transform, opacity, filter;
+	}
+</style>
