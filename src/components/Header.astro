@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import gitLogo from '../assets/GITTransparentCrop.png';
 
 interface NavItem {
   label: string;
@@ -58,7 +60,12 @@ const {
 
     <!-- Brand / Logo -->
     <a href="/" class="btn btn-ghost text-xl normal-case gap-2">
-      <span class="badge badge-primary font-bold">GIT</span>
+      <Image
+        alt="Girls in Tech Logo",
+        src={gitLogo},
+        width={20}
+        height={5}
+      />
       <span class="font-bold tracking-tight font-header">{title}</span>
     </a>
   </div>
