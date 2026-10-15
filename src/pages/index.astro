@@ -1,6 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Event from '../components/Event.astro';
+import { getCollection } from 'astro:content';
+
+const allEvents = await getCollection("events");
+const featured = allEvents.filter(event => event.data.featured == true);
 ---
 
 <Layout>
@@ -41,6 +45,12 @@ import Event from '../components/Event.astro';
 	<!-- FeaturedEvent component insert -->
 	 <div class="min-h-[50vh]">
 		<h1 class="text-5xl text-center">Featured Event</h1>
-		<Event />
+		{featured.map((event) => (
+			<Event 
+				eventTitle = {event.data.title}
+				imgs = {event.data.imgs}
+				description = {event.data.description}
+			/>
+		))}
 	 </div>
 </Layout>

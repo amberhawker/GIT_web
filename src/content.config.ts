@@ -17,6 +17,7 @@ const events = defineCollection({
         ),
         description: z.string().optional(),
         date: z.string().optional(),
+        featured: z.boolean().default(false)
     }),
 });
 
