@@ -31,7 +31,7 @@ const sponsors = await getCollection("sponsors");
 	</div>
 	<!-- About us -->
 	<div min-h-[50vh] h-[50vh] max-h-screen>
-		<div class="text-center">
+		<div class="text-center mt-[2vh]">
 			<h1 class="text-5xl">About us</h1>
 		</div>
 		<div class="text-justify mx-20">
@@ -48,7 +48,7 @@ const sponsors = await getCollection("sponsors");
 	</div>
 	<!-- FeaturedEvent component insert -->
 	 <div class="min-h-[50vh]">
-		<h1 class="text-5xl text-center">Featured Event</h1>
+		<h1 class="text-5xl text-center mt-[2vh]">Featured Event</h1>
 		{featured.map((event) => (
 			<Event 
 				eventTitle = {event.data.title}
@@ -59,7 +59,7 @@ const sponsors = await getCollection("sponsors");
 	 </div>
 	 <!-- Sponsor block -->
 	 <div class="mt-[4vh]">
-		<h2 class="text-3xl text-center">Thanks to our sponsors</h2>
+		<h2 class="text-3xl text-center">Thanks to our sponsors!</h2>
 		{sponsors.map((sponsor) => (
 			<Sponsor
 				name = {sponsor.data.name}
