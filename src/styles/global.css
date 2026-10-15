@@ -2,9 +2,67 @@
 @plugin "daisyui";
 
 /* ==========================================================================
-   Base Colors - Soft, Girly Pink Palette
+   Global Fonts:
+   - Header fonts: Redaction 50 (https://fontsource.org/fonts/redaction-50)
+   - Paragraphs and regular text: Natural Mono (https://www.dafont.com/natural-mono-2.font)
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Redaction 50';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url('/fonts/Redaction_50-Regular.woff2') format('woff2'),
+    url('/fonts/Redaction50-Regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Redaction 50';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url('/fonts/Redaction_50-Bold.woff2') format('woff2'),
+    url('/fonts/Redaction50-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Redaction 50';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url('/fonts/Redaction_50-Italic.woff2') format('woff2'),
+    url('/fonts/Redaction50-Italic.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Natural Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/NaturalMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Natural Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/NaturalMono-Bold.ttf') format('truetype');
+}
+
+/* ==========================================================================
+   Base Colors & Typography Themes
    ========================================================================== */
 @theme {
+  --font-header: "Redaction 50", Georgia, serif;
+  --font-heading: "Redaction 50", Georgia, serif;
+  --font-body: "Natural Mono", ui-monospace, monospace;
+  --font-sans: "Natural Mono", ui-monospace, monospace;
+  --font-mono: "Natural Mono", ui-monospace, monospace;
+
   --color-base-100: #ffd8e8;
   --color-base-200: #fbbdd8;
   --color-base-300: #f69dc4;
@@ -14,10 +72,33 @@
 :root,
 [data-theme],
 [data-theme="light"] {
+  --font-header: "Redaction 50", Georgia, serif;
+  --font-body: "Natural Mono", ui-monospace, monospace;
+
   --color-base-100: #ffd8e8;
   --color-base-200: #fbbdd8;
   --color-base-300: #f69dc4;
   --color-base-content: #3d0824;
+}
+
+html,
+body {
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-header,
+.font-heading {
+  font-family: var(--font-header);
+}
+
+p {
+  font-family: var(--font-body);
 }
 
 /* ==========================================================================
@@ -39,7 +120,6 @@
     0 8px 24px rgba(0, 0, 0, 0.35) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
-  font-family: Tahoma, "Segoe UI", Geneva, Verdana, sans-serif;
 }
 
 /* Windows XP Luna Title Bar */
@@ -123,6 +203,7 @@
 
 /* Windows XP Inner Content Canvas */
 .mockup-window > div {
+  font-family: var(--font-body);
   background-color: var(--color-base-100);
   color: var(--color-base-content);
   border: 1px solid var(--color-base-300);
