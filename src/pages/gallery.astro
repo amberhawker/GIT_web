@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+import { Image } from 'astro:assets';
+
+const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
+    '/src/assets/gallery/*.{png,jpg,jpeg,webp,gif}',
+    {eager: true}
+);
+
+const images = Object.values(imageFiles).map((img) => img.default);
+---
+
+<Layout>
+  <div class="max-w-screen mx-auto px-4 py-8">
+    <h1 class="text-5xl font-bold text-center mb-8">Gallery</h1>
+    <div class="flex flex-wrap gap-4 justify-center items-center">
+      {images.map((img) => (
+        <div
+          class="overflow-hidden rounded-box shadow-md bg-base-300 hover:scale-[1.02] transition-transform duration-200 h-48 sm:h-56 md:h-64 max-h-[300px]"
+          style={{ aspectRatio: `${img.width} / ${img.height}` }}
+        >
+          <Image
+            src={img}
+            alt="Gallery photo"
+            class="w-full h-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+</Layout>
