@@ -1,0 +1,9 @@
+{
+    "title": "Meet & Greetmeet",
+    "imgs": [
+        {"path": "/assets/events/meet&greet.png", "alt": "animated git logo"}
+    ],
+    "description": "Our first event of the academic year, aimed towards bringing students of various disciplines together to have some fun and get used to the campus and get to know others!",
+    "date": "tomorrow bro",
+    "featured": false
+}

@@ -1,0 +1,9 @@
+{
+    "title": "What the Duck!",
+    "imgs": [
+        {"path": "/assets/events/whattheduck.jpg", "alt": "animated git logo"}
+    ],
+    "description": "A fun little event, at the end of the year, where you can come hunt for 100 little ducks hidden around that you can keep, paint some rubber ducks that you can also keep, and win some awesome prizes!!!",
+    "date": "",
+    "featured": false
+}

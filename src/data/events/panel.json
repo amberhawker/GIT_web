@@ -1,0 +1,9 @@
+{
+    "title": "Panel",
+    "imgs": [
+        {"path": "/assets/events/panel.png", "alt": "animated git logo"}
+    ],
+    "description": "Every year, we host a panel event that covers a variety of areas, from career pathways, dealing with struggles in the professional world, and many more relevant topics!",
+    "date": "",
+    "featured": false
+}

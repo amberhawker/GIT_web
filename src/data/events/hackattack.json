@@ -1,0 +1,9 @@
+{
+    "title": "Hack-Attack",
+    "imgs": [
+        {"path": "/assets/events/hackattack.png", "alt": "animated git logo"}
+    ],
+    "description": "A three - day event, where groups of students work to build and prototype solutions. Students then present their projects to judges for prizes and recognition, with goals ranging from innovation and skill-building to talent recruitment for companies.",
+    "date": "",
+    "featured": false
+}
