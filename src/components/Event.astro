@@ -61,15 +61,107 @@ const {
 </div>
 
 <script>
-  document.querySelectorAll('.event-card').forEach((card) => {
-    const stack = card.querySelector('.photo-stack');
-    const nextBtn = card.querySelector('.next-btn');
+  import { animate, stagger } from 'animejs';
 
-    nextBtn?.addEventListener('click', () => {
-      if (stack && stack.firstElementChild) {
-        // Move the top photo to the end of the stack to reveal the next one
-        stack.appendChild(stack.firstElementChild);
+  const setupEventCards = () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.event-card.mockup-window'));
+
+    if (!cards.length) return;
+
+    // 1. Photo stack button handler
+    cards.forEach((card) => {
+      if (!card.dataset.initialized) {
+        card.dataset.initialized = 'true';
+        const stack = card.querySelector('.photo-stack');
+        const nextBtn = card.querySelector('.next-btn');
+
+        nextBtn?.addEventListener('click', () => {
+          if (stack && stack.firstElementChild) {
+            stack.appendChild(stack.firstElementChild);
+          }
+        });
       }
     });
-  });
+
+    // 2. Old-web serial pop-in animation
+    if (prefersReducedMotion) {
+      cards.forEach((card) => {
+        card.style.opacity = '1';
+        card.style.transform = 'none';
+        card.style.filter = 'none';
+      });
+      return;
+    }
+
+    // Group cards by their parent container so cards in the same grid/section animate in series
+    const containers = new Set<HTMLElement>();
+    cards.forEach((card) => {
+      if (card.parentElement && !card.dataset.animated) {
+        containers.add(card.parentElement);
+      }
+    });
+
+    containers.forEach((container) => {
+      const containerCards = Array.from(
+        container.querySelectorAll<HTMLElement>('.event-card.mockup-window:not([data-animated="true"])')
+      );
+
+      if (!containerCards.length) return;
+
+      // Prepare cards in initial hidden / scaled state
+      containerCards.forEach((card) => {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.7) translateY(35px)';
+        card.style.willChange = 'transform, opacity, filter';
+      });
+
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              obs.unobserve(entry.target);
+
+              // Mark as animated to prevent re-triggering
+              containerCards.forEach((c) => (c.dataset.animated = 'true'));
+
+              // Old-web bouncy spring pop with CRT monitor phosphor brightness flash
+              animate(containerCards, {
+                opacity: [0, 1],
+                scale: [0.7, 1],
+                translateY: [35, 0],
+                filter: [
+                  'brightness(1.6) contrast(1.15)',
+                  'brightness(1) contrast(1)'
+                ],
+                duration: 650,
+                ease: 'outBack(2.2)',
+                delay: stagger(200),
+                onComplete: () => {
+                  containerCards.forEach((card) => {
+                    card.style.willChange = 'auto';
+                    card.style.transform = '';
+                    card.style.filter = '';
+                  });
+                }
+              });
+            }
+          });
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '0px 0px -40px 0px'
+        }
+      );
+
+      observer.observe(container);
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupEventCards);
+  } else {
+    setupEventCards();
+  }
+  document.addEventListener('astro:page-load', setupEventCards);
 </script>
