@@ -14,40 +14,314 @@ type LinkWithIcon = LinkEntry & {
 const buttons = allLinks.filter(link => link.data.ico === undefined);
 const icos = allLinks.filter((link): link is LinkWithIcon => link.data.ico !== undefined);
 
+// Helper for button metadata
+const getButtonMeta = (id: string) => {
+    const lower = id.toLowerCase();
+    if (lower.includes('discord')) {
+        return {
+            tag: 'COMMUNITY SERVER',
+            desc: 'Join our Discord to chat with members, join study groups, and get event announcements first!',
+            cta: 'Join Server',
+            type: 'discord',
+        };
+    }
+    if (lower.includes('rubric')) {
+        return {
+            tag: 'OFFICIAL MEMBERSHIP',
+            desc: 'Register as an official SUO club member via Hello Rubric. Free and open to everyone!',
+            cta: 'Register Now',
+            type: 'rubric',
+        };
+    }
+    if (lower.includes('linktree')) {
+        return {
+            tag: 'RESOURCE DIRECTORY',
+            desc: 'Quick access to all our active forms, slide decks, newsletters, and signups in one hub.',
+            cta: 'Explore Links',
+            type: 'linktree',
+        };
+    }
+    return {
+        tag: 'OFFICIAL LINK',
+        desc: 'Connect with Girls in Tech portals and student resources.',
+        cta: 'Open Link',
+        type: 'default',
+    };
+};
+
+// Helper for social media accounts
+const getSocialMeta = (id: string) => {
+    const lower = id.toLowerCase();
+    if (lower.includes('instagram')) {
+        return {
+            tag: 'STORIES & UPDATES',
+            handle: '@girls.in.tech',
+            badge: 'Active Daily',
+            note: 'Photo dumps, upcoming event stories, and community highlights.',
+            cta: 'Follow'
+        };
+    }
+    if (lower.includes('linkedin')) {
+        return {
+            tag: 'PROFESSIONAL NETWORK',
+            handle: 'Girls in Tech UBCO',
+            badge: 'Networking',
+            note: 'Career opportunities, industry panels, and alumni spotlights.',
+            cta: 'Connect'
+        };
+    }
+    if (lower.includes('facebook')) {
+        return {
+            tag: 'COMMUNITY PAGE',
+            handle: 'suogit',
+            badge: 'Community',
+            note: 'Student Union news, general updates, and club announcements.',
+            cta: 'Visit Page'
+        };
+    }
+    return {
+        tag: 'SOCIAL CHANNEL',
+        handle: id,
+        badge: 'Social',
+        note: 'Follow us for club updates and announcements.',
+        cta: 'Open Profile'
+    };
+};
 ---
 
 <Layout>
-    <div>
-        <h1 class="text-5xl text-center mb-8">Interested?</h1>
-        <div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-6 p-4 md:p-8">
-            <div class="flex-1 text-center">
-                <p>Feel Free to reach out to us anytime! We are here to help and make you feel a part of UBCO!!</p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+        <!-- Page Header with Retro Accents -->
+        <div class="text-center mb-10 relative">
+            <!-- Eyebrow Pill -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-base-100 border border-base-content/20 text-xs font-mono font-bold text-base-content mb-3 shadow-xs">
+                <span class="text-primary animate-pulse">🌸</span>
+                <span>C:\GIRLS_IN_TECH\CONTACT · GET IN TOUCH</span>
             </div>
-            <div class="divider md:divider-horizontal"></div>
-            <div class="flex-1">
-                <p>hey bro</p>
-                {buttons.map((link) => (
-                    <a href={link.data.href}>{link.data.id}</a>
-                    <br/>
-                ))}
-                <div class="flex gap-3 my-4">
-                    {icos.map((link) => (
-                        <a
-                            href={link.data.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-flex items-center justify-center w-10 h-10 rounded-full overflow-hidden hover:opacity-85 transition-opacity"
-                            style={`background-color: #${link.data.ico.bg.replace(/^#/, '')};`}
-                        >
-                            <img
-                                src={"/assets/icons/" + link.data.ico.src + ".png"}
-                                alt={link.data.id + " icon"}
-                                class="w-full h-full object-contain"
-                            />
-                        </a>
-                    ))}
+
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold font-header tracking-tight text-base-content">
+                Let's Connect!
+            </h1>
+            <p class="mt-3 text-base sm:text-lg font-body text-base-content/85 max-w-2xl mx-auto leading-relaxed">
+                Feel free to reach out to us anytime! We are here to help, answer questions, and make you feel right at home in the UBCO tech community.
+            </p>
+        </div>
+
+        <!-- Quick Alert Ribbon -->
+        <div class="mb-10 max-w-5xl mx-auto p-4 rounded-xl bg-base-100/90 border-2 border-base-content/30 shadow-[3px_3px_0px_#3d0824] flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-base-content select-none">
+            <div class="flex items-center gap-2.5">
+                <span class="text-lg">💬</span>
+                <span class="font-bold">Fastest way to reach us:</span>
+                <span class="text-base-content/80">Ping us on Discord or send a DM on Instagram!</span>
+            </div>
+            <div class="flex items-center gap-2 text-primary font-bold">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>ONLINE · SUO GIRLS IN TECH</span>
+            </div>
+        </div>
+
+        <!-- Side-by-Side Grid: 01 next to 02 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start max-w-6xl mx-auto">
+            
+            <!-- SECTION 01: Official Platforms -->
+            <div class="flex flex-col gap-5">
+                <div class="flex items-center justify-between border-b border-base-content/15 pb-2">
+                    <span class="font-mono text-xs font-bold tracking-wider uppercase text-primary flex items-center gap-1.5">
+                        <span class="opacity-60">//</span> 01 · OFFICIAL PLATFORMS
+                    </span>
+                    <span class="font-mono text-[11px] opacity-60">Instant Access</span>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    {buttons.map((link) => {
+                        const meta = getButtonMeta(link.data.id);
+                        return (
+                            <div class="contact-card group relative p-5 bg-base-100 rounded-xl border-2 border-base-content shadow-[4px_4px_0px_#3d0824] transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#3d0824]">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div class="flex items-start gap-4 flex-1">
+                                        <!-- Retro Icon Box -->
+                                        <div 
+                                            class="w-12 h-12 rounded-lg border-2 border-base-content flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#3d0824]"
+                                            style={`background-color: ${meta.type === 'discord' ? '#5865F2' : meta.type === 'rubric' ? '#FFD8E8' : '#D1FADF'}; color: ${meta.type === 'discord' ? '#FFFFFF' : '#3D0824'};`}
+                                        >
+                                            {meta.type === 'discord' && (
+                                                <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                                                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                                                </svg>
+                                            )}
+                                            {meta.type === 'rubric' && (
+                                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                                    <circle cx="9" cy="7" r="4"/>
+                                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                </svg>
+                                            )}
+                                            {meta.type === 'linktree' && (
+                                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                                </svg>
+                                            )}
+                                            {meta.type === 'default' && (
+                                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <line x1="2" y1="12" x2="22" y2="12"/>
+                                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/>
+                                                </svg>
+                                            )}
+                                        </div>
+
+                                        <!-- Content Info -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-base-200 text-base-content/80 tracking-wider uppercase border border-base-content/10">
+                                                    {meta.tag}
+                                                </span>
+                                            </div>
+                                            <h3 class="text-xl font-bold font-header text-base-content group-hover:text-primary transition-colors">
+                                                {link.data.id}
+                                            </h3>
+                                            <p class="text-xs sm:text-sm font-body text-base-content/80 mt-1 leading-relaxed">
+                                                {meta.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- CTA Action Button -->
+                                    <a
+                                        href={link.data.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="btn btn-sm btn-primary btn-tactile text-white font-bold gap-1.5 w-full sm:w-auto shrink-0 font-mono text-xs"
+                                    >
+                                        <span>{meta.cta}</span>
+                                        <span>↗</span>
+                                    </a>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
+
+            <!-- SECTION 02: Social Media Radar -->
+            <div class="flex flex-col gap-5">
+                <div class="flex items-center justify-between border-b border-base-content/15 pb-2">
+                    <span class="font-mono text-xs font-bold tracking-wider uppercase text-secondary flex items-center gap-1.5">
+                        <span class="opacity-60">//</span> 02 · SOCIAL MEDIA RADAR
+                    </span>
+                    <span class="font-mono text-[11px] opacity-60">Follow & DM</span>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    {icos.map((link) => {
+                        const social = getSocialMeta(link.data.id);
+                        return (
+                            <div class="social-card group relative p-5 bg-base-100 rounded-xl border-2 border-base-content shadow-[4px_4px_0px_#3d0824] transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#3d0824]">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div class="flex items-start gap-4 flex-1">
+                                        <!-- Branded Social Icon Box -->
+                                        <div
+                                            class="w-12 h-12 rounded-lg p-2.5 border-2 border-base-content flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#3d0824] transition-transform duration-200 group-hover:scale-105"
+                                            style={`background-color: #${link.data.ico.bg.replace(/^#/, '')};`}
+                                        >
+                                            <img
+                                                src={"/assets/icons/" + link.data.ico.src + ".png"}
+                                                alt={link.data.id + " icon"}
+                                                class="w-full h-full object-contain drop-shadow-xs"
+                                            />
+                                        </div>
+
+                                        <!-- Content Info -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-base-200 text-base-content/80 tracking-wider uppercase border border-base-content/10">
+                                                    {social.badge}
+                                                </span>
+                                                <span class="font-mono text-[11px] text-primary font-bold">
+                                                    {social.handle}
+                                                </span>
+                                            </div>
+                                            <h3 class="text-xl font-bold font-header text-base-content group-hover:text-primary transition-colors">
+                                                {link.data.id}
+                                            </h3>
+                                            <p class="text-xs sm:text-sm font-body text-base-content/80 mt-1 leading-relaxed">
+                                                {social.note}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- CTA Action Button -->
+                                    <a
+                                        href={link.data.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="btn btn-sm btn-outline btn-tactile text-base-content font-bold gap-1.5 w-full sm:w-auto shrink-0 font-mono text-xs"
+                                    >
+                                        <span>{social.cta}</span>
+                                        <span>↗</span>
+                                    </a>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <!-- Campus Coordinates Card (Spans full width across both columns) -->
+            <div class="lg:col-span-2 mt-2 p-6 bg-base-100 rounded-2xl border-2 border-base-content shadow-[4px_4px_0px_#3d0824] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs text-base-content">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📍</span>
+                    <div class="flex flex-col gap-0.5 font-body">
+                        <p class="font-bold text-sm text-base-content">University of British Columbia · Okanagan Campus</p>
+                        <p class="text-xs text-base-content/75">Kelowna, BC · Student Union Okanagan (SUO) Affiliated Club</p>
+                    </div>
+                </div>
+                <a
+                    href="/events"
+                    class="btn btn-sm btn-primary btn-tactile text-white text-xs font-mono shrink-0 w-full sm:w-auto"
+                >
+                    <span>View Events Calendar</span>
+                    <span>→</span>
+                </a>
+            </div>
+
         </div>
     </div>
 </Layout>
+
+<script>
+    import { animate, stagger } from 'animejs';
+
+    const setupContactPage = () => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) return;
+
+        const cards = document.querySelectorAll<HTMLElement>('.contact-card, .social-card');
+        if (cards.length) {
+            animate(cards, {
+                opacity: [0, 1],
+                scale: [0.92, 1],
+                translateY: [25, 0],
+                duration: 600,
+                ease: 'outBack(2)',
+                delay: stagger(70),
+            });
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupContactPage);
+    } else {
+        setupContactPage();
+    }
+    document.addEventListener('astro:page-load', setupContactPage);
+</script>
+
+<style>
+    .contact-card,
+    .social-card {
+        will-change: transform, box-shadow;
+    }
+</style>
