@@ -222,15 +222,17 @@ const sponsors = await getCollection("sponsors");
 		</div>
 	</section>
 	<!-- FeaturedEvent component insert -->
-	 <div class="min-h-[50vh]">
-		<h1 class="text-5xl text-center mt-[2vh]">Featured Event</h1>
-		{featured.map((event) => (
-			<Event 
-				eventTitle = {event.data.title}
-				imgs = {event.data.imgs}
-				description = {event.data.description}
-			/>
-		))}
+	 <div class="min-h-[50vh] px-4 md:px-8 py-8">
+		<h1 class="text-5xl text-center mt-[2vh] mb-8">Featured Event</h1>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
+			{featured.map((event) => (
+				<Event 
+					eventTitle = {event.data.title}
+					imgs = {event.data.imgs}
+					description = {event.data.description}
+				/>
+			))}
+		</div>
 	 </div>
 	 <!-- Sponsor block -->
 	 <div class="mt-[4vh]">

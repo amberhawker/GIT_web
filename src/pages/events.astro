@@ -8,11 +8,12 @@ const allEvents = await getCollection("events");
 ---
 
 <Layout>
-    <div>
+    <div class="mt-[3vh]">
         <div>
             <!--has the start of the page -->
+            <h1 class="text-3xl font-bold text-center">Hey dude</h1>
         </div>
-        <div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto px-4 md:px-8 my-8">
             <!--all events TODO: make sure they're sorted by date? Astro says it's non-deterministic -->
             {allEvents.map((event) => (
                 <Event

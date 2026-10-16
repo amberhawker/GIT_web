@@ -22,11 +22,11 @@ const {
 } = Astro.props;
 ---
 
-<div class="event-card mockup-window bg-base-100 border border-base-300 w-25% mx-[7vh] mt-[5vh]" data-title={eventTitle}>
+<div class="event-card mockup-window bg-base-100 border border-base-300 w-full h-full flex flex-col justify-between" data-title={eventTitle}>
   <!-- Horizontal layout for photos and description/title -->
-  <div class="flex flex-col max-w-20% md:flex-row items-left justify-left gap-6 p-6 md:p-8">
+  <div class="flex flex-col xl:flex-row items-start xl:items-center justify-start gap-6 p-6 md:p-8 flex-1">
     <!-- Photo Stack Container with button layered on top of photos -->
-    <div class="relative w-full md:w-[60vh] max-w-[60vh] aspect-[3/2] shrink-0">
+    <div class="relative w-full xl:w-64 aspect-3/2 shrink-0">
       <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
         {imgs.map((img) => (
           <Image
@@ -49,11 +49,12 @@ const {
       </button>
     </div>
 
-    <div class="divider divider-horizontal hidden md:flex"></div>
+    <div class="divider divider-horizontal hidden xl:flex self-stretch"></div>
+    <div class="divider divider-vertical xl:hidden my-0"></div>
 
     <!-- Title and Description horizontal to the photos -->
-    <div class="flex flex-col justify-center text-left max-w-100%">
-      <h3 class="text-3xl font-bold mb-2">{eventTitle}</h3>
+    <div class="flex flex-col justify-center text-left flex-1 min-w-0">
+      <h3 class="text-2xl md:text-3xl font-bold mb-2">{eventTitle}</h3>
       <p class="text-base text-base-content/80 leading-relaxed">{description}</p>
     </div>
   </div>
