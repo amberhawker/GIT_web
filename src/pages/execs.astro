@@ -22,3 +22,11 @@ const allExecs = await getCollection("execs");
         ))}
     </div>
 </Layout>
+
+<script>
+    import { createDraggable } from 'animejs';
+    const execs = document.querySelectorAll('.exec-card');
+    execs.forEach(exec => {
+        createDraggable(exec);
+    });
+</script>
