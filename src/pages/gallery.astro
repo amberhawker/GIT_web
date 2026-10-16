@@ -26,13 +26,13 @@ const tilts = [
 ---
 
 <Layout>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
     <!-- Page Header with Retro Accents -->
-    <div class="text-center mb-8 relative">
+    <div class="text-center mb-10 relative">
       <!-- Retro Eyebrow Pill -->
       <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-base-100 border border-base-content/20 text-xs font-mono font-bold text-base-content mb-3 shadow-xs">
-        <span class="text-primary">🌸</span>
-        <span>C:\GIRLS_IN_TECH\ALBUM · PHOTO ARCHIVE</span>
+        <span class="text-primary animate-pulse">🌸</span>
+        <span>C:\GIRLS_IN_TECH\ALBUM · {images.length} PHOTOS ARCHIVED</span>
       </div>
 
       <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold font-header tracking-tight text-base-content">
@@ -43,137 +43,72 @@ const tilts = [
       </p>
     </div>
 
-    <!-- Windows XP Explorer Window -->
-    <div
-      class="mockup-window w-full bg-base-100 border border-base-300 shadow-xl"
-      data-title="Girls in Tech - Photo Album (C:\My Pictures\Gallery)"
-    >
-      <!-- Explorer Classic Menu Bar -->
-      <div class="bg-base-200/90 border-b border-base-300 px-4 py-1.5 flex items-center justify-between text-xs font-mono select-none">
-        <div class="flex items-center gap-3 sm:gap-4 text-base-content/90 font-medium">
-          <span class="hover:bg-primary/20 px-1.5 py-0.5 rounded cursor-default"><span class="underline">F</span>ile</span>
-          <span class="hover:bg-primary/20 px-1.5 py-0.5 rounded cursor-default"><span class="underline">E</span>dit</span>
-          <span class="hover:bg-primary/20 px-1.5 py-0.5 rounded cursor-default"><span class="underline">V</span>iew</span>
-          <span class="hover:bg-primary/20 px-1.5 py-0.5 rounded cursor-default">Fa<span class="underline">v</span>orites</span>
-          <span class="hover:bg-primary/20 px-1.5 py-0.5 rounded cursor-default"><span class="underline">T</span>ools</span>
-          <span class="hover:bg-primary/20 px-1.5 py-0.5 rounded cursor-default"><span class="underline">H</span>elp</span>
-        </div>
-        <div class="hidden sm:flex items-center gap-1.5 text-primary font-bold text-xs">
-          <span>🌸 UBCO GIT</span>
-        </div>
-      </div>
-
-      <!-- Explorer Address & Toolbar Strip -->
-      <div class="bg-base-100 border-b border-base-300 px-3 py-2 flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono">
-        <div class="flex items-center gap-1">
-          <button
-            type="button"
-            class="btn btn-xs btn-outline btn-tactile text-[11px] px-2.5 py-0 h-6 min-h-0"
-            onclick="history.back()"
-            title="Go Back"
+    <!-- Polaroid Photos Flex Showcase (Directly on Page) -->
+    <div class="flex flex-wrap gap-8 justify-center items-center py-4 max-w-6xl mx-auto">
+      {images.map((img, index) => {
+        const tilt = tilts[index % tilts.length];
+        return (
+          <div
+            class:list={[
+              "gallery-card group relative p-3 pb-3.5 bg-white rounded-xs border-2 border-base-content shadow-[4px_4px_0px_#3d0824] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary z-10 hover:z-30",
+              tilt
+            ]}
+            data-img-src={img.data.src}
+            data-img-name={img.filename}
+            data-img-dims={`${img.data.width} × ${img.data.height} px`}
+            tabindex="0"
+            role="button"
+            aria-label={`View photo ${img.filename}`}
           >
-            ◀ Back
-          </button>
-          <button
-            type="button"
-            class="btn btn-xs btn-outline btn-tactile text-[11px] px-2 py-0 h-6 min-h-0"
-            onclick="history.forward()"
-            title="Go Forward"
-          >
-            ▶
-          </button>
-        </div>
-        <div class="flex-1 flex items-center gap-2 bg-white px-2.5 py-1 rounded border border-base-content/30 shadow-inner min-w-[200px]">
-          <span class="text-base-content/50">📁</span>
-          <span class="text-base-content/60 font-semibold select-none">Address:</span>
-          <span class="text-base-content font-bold tracking-tight truncate">C:\GirlsInTech\Gallery\Photos</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="badge badge-sm badge-outline font-mono text-[10px]">{images.length} items</span>
-        </div>
-      </div>
+            <!-- Washi Tape strip -->
+            <div class="tape-strip pointer-events-none absolute -top-2.5 left-1/2 -translate-x-1/2 w-14 h-4 border border-base-content/20 -rotate-2 z-20"></div>
 
-      <!-- Photo Album Canvas -->
-      <div class="p-6 sm:p-10 bg-base-100/60 min-h-[50vh] flex flex-col justify-between">
-        <!-- Sub-header tip banner -->
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-base-content/70 pb-3 border-b border-base-300/60">
-          <div class="flex items-center gap-2">
-            <span>✨</span>
-            <span>Click any snapshot to inspect in the Picture Viewer</span>
-          </div>
-          <div class="hidden sm:flex items-center gap-2 text-primary font-semibold">
-            <span>● 100% Zoom Available</span>
-          </div>
-        </div>
+            <!-- Photo Container with natural aspect ratio -->
+            <div
+              class="relative overflow-hidden bg-base-300 rounded-xs border border-base-content/25 h-48 sm:h-56 md:h-64 max-h-[300px]"
+              style={{ aspectRatio: `${img.data.width} / ${img.data.height}` }}
+            >
+              <Image
+                src={img.data}
+                alt={img.filename}
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
 
-        <!-- Polaroid Photos Flex Showcase -->
-        <div class="flex flex-wrap gap-8 justify-center items-center py-4">
-          {images.map((img, index) => {
-            const tilt = tilts[index % tilts.length];
-            return (
-              <div
-                class:list={[
-                  "gallery-card group relative p-3 pb-3.5 bg-white rounded-xs border-2 border-base-content shadow-[4px_4px_0px_#3d0824] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary z-10 hover:z-30",
-                  tilt
-                ]}
-                data-img-src={img.data.src}
-                data-img-name={img.filename}
-                data-img-dims={`${img.data.width} × ${img.data.height} px`}
-                tabindex="0"
-                role="button"
-                aria-label={`View photo ${img.filename}`}
-              >
-                <!-- Washi Tape strip -->
-                <div class="tape-strip pointer-events-none absolute -top-2.5 left-1/2 -translate-x-1/2 w-14 h-4 border border-base-content/20 -rotate-2 z-20"></div>
-
-                <!-- Photo Container with natural aspect ratio -->
-                <div
-                  class="relative overflow-hidden bg-base-300 rounded-xs border border-base-content/25 h-48 sm:h-56 md:h-64 max-h-[300px]"
-                  style={{ aspectRatio: `${img.data.width} / ${img.data.height}` }}
-                >
-                  <Image
-                    src={img.data}
-                    alt={img.filename}
-                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-
-                  <!-- Hover viewfinder badge -->
-                  <div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/65 text-white font-mono text-[9px] tracking-wider uppercase opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
-                    <span>🔍</span>
-                    <span>VIEW</span>
-                  </div>
-                </div>
-
-                <!-- Bottom Polaroid Caption / Label -->
-                <div class="mt-2.5 pt-1.5 border-t border-base-content/10 flex items-center justify-between gap-2 text-base-content select-none">
-                  <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="text-xs">📸</span>
-                    <span class="font-mono text-xs font-bold truncate max-w-[150px]">{img.filename}</span>
-                  </div>
-                  <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-base-200 text-base-content/80 font-bold uppercase">
-                    {img.data.format}
-                  </span>
-                </div>
+              <!-- Hover viewfinder badge -->
+              <div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/65 text-white font-mono text-[9px] tracking-wider uppercase opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 pointer-events-none">
+                <span>🔍</span>
+                <span>VIEW</span>
               </div>
-            );
-          })}
-        </div>
+            </div>
 
-        <!-- Window Bottom Status Bar -->
-        <div class="mt-8 pt-4 border-t border-base-300 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-base-content/75 select-none">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-            <span>{images.length} photo(s) indexed</span>
-            <span class="opacity-40">|</span>
-            <span class="hidden sm:inline">Disk: UBCO_GIT (C:)</span>
+            <!-- Bottom Polaroid Caption / Label -->
+            <div class="mt-2.5 pt-1.5 border-t border-base-content/10 flex items-center justify-between gap-2 text-base-content select-none">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-xs">📸</span>
+                <span class="font-mono text-xs font-bold truncate max-w-[150px]">{img.filename}</span>
+              </div>
+              <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-base-200 text-base-content/80 font-bold uppercase">
+                {img.data.format}
+              </span>
+            </div>
           </div>
-          <div class="flex items-center gap-2 text-[11px] opacity-80">
-            <span>🌸 Girls in Tech Memories</span>
-            <span class="opacity-40">|</span>
-            <span>🔒 Local Intranet</span>
-          </div>
-        </div>
+        );
+      })}
+    </div>
+
+    <!-- Gallery Bottom Status Bar -->
+    <div class="mt-12 pt-6 border-t border-base-content/20 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-base-content/75 select-none max-w-5xl mx-auto">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+        <span>{images.length} photo(s) indexed</span>
+        <span class="opacity-40">|</span>
+        <span>Disk: UBCO_GIT (C:)</span>
+      </div>
+      <div class="flex items-center gap-2 text-[11px] opacity-80">
+        <span>🌸 Girls in Tech Memories</span>
+        <span class="opacity-40">|</span>
+        <span>Kelowna, BC</span>
       </div>
     </div>
 
