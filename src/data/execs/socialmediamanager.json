@@ -3,5 +3,15 @@
     "name": "Yan Tan",
     "img": "/assets/execs/yan-tan.jpg",
     "degree": "Second Year Biochemistry",
-    "description": "Enjoys music and journaling ^^"
+    "description": "Enjoys music and journaling ^^",
+    "imgs": [
+        {
+            "path": "/assets/execs/yan-tan.jpg",
+            "alt": "Yan Tan"
+        },
+        {
+            "path": "/assets/execs/yan-tan-2.jpg",
+            "alt": "Yan Tan"
+        }
+    ]
 }

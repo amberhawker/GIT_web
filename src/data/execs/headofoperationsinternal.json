@@ -3,5 +3,15 @@
     "name": "Aitana Soler",
     "img": "/assets/execs/aitana-soler.jpg",
     "degree": "Third Year Data Science",
-    "description": "Enjoys reading, drawing and crocheting. She's also lived in Mexico, US and Canada!"
+    "description": "Enjoys reading, drawing and crocheting. She's also lived in Mexico, US and Canada!",
+    "imgs": [
+        {
+            "path": "/assets/execs/aitana-soler.jpg",
+            "alt": "Aitana Soler"
+        },
+        {
+            "path": "/assets/execs/aitana-soler-2.jpg",
+            "alt": "Aitana Soler"
+        }
+    ]
 }

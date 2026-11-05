@@ -3,5 +3,19 @@
     "name": "Monisha Kumar",
     "img": "/assets/execs/monisha-kumar.jpg",
     "degree": "Second Year Electrical Engineering",
-    "description": "Loves music and dilly-dallying!"
+    "description": "Loves music and dilly-dallying!",
+    "imgs": [
+        {
+            "path": "/assets/execs/monisha-kumar.jpg",
+            "alt": "Monisha Kumar"
+        },
+        {
+            "path": "/assets/execs/monisha-kumar-2.jpg",
+            "alt": "Monisha Kumar"
+        },
+        {
+            "path": "/assets/execs/monisha-kumar-3.jpg",
+            "alt": "Monisha Kumar"
+        }
+    ]
 }

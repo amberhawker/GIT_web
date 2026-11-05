@@ -3,5 +3,15 @@
     "name": "Ruby",
     "img": "/assets/execs/ruby.jpg",
     "degree": "First Year Biology",
-    "description": "Loves to ski, bike and spend lots of time outside!"
+    "description": "Loves to ski, bike and spend lots of time outside!",
+    "imgs": [
+        {
+            "path": "/assets/execs/ruby.jpg",
+            "alt": "Ruby"
+        },
+        {
+            "path": "/assets/execs/ruby-2.jpg",
+            "alt": "Ruby"
+        }
+    ]
 }

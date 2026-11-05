@@ -3,5 +3,23 @@
     "name": "Shivani",
     "img": "/assets/execs/shivani.jpg",
     "degree": "Second Year Mechanical Engineering",
-    "description": "Loves singing, dancing, reading, Marvel and k-pop!!"
+    "description": "Loves singing, dancing, reading, Marvel and k-pop!!",
+    "imgs": [
+        {
+            "path": "/assets/execs/shivani.jpg",
+            "alt": "Shivani"
+        },
+        {
+            "path": "/assets/execs/shivani-2.jpg",
+            "alt": "Shivani"
+        },
+        {
+            "path": "/assets/execs/shivani-3.jpg",
+            "alt": "Shivani"
+        },
+        {
+            "path": "/assets/execs/shivani-4.jpg",
+            "alt": "Shivani"
+        }
+    ]
 }

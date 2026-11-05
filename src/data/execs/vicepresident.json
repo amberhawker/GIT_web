@@ -3,5 +3,15 @@
     "name": "Grayson Gosse",
     "img": "/assets/execs/grayson-gosse.jpg",
     "degree": "Fourth Year Major in Comp Sci Minor in Commerce",
-    "description": "Likes thrifting, listening to audiobooks and skiing!"
+    "description": "Likes thrifting, listening to audiobooks and skiing!",
+    "imgs": [
+        {
+            "path": "/assets/execs/grayson-gosse.jpg",
+            "alt": "Grayson Gosse"
+        },
+        {
+            "path": "/assets/execs/grayson-gosse-2.jpg",
+            "alt": "Grayson Gosse"
+        }
+    ]
 }

@@ -3,5 +3,15 @@
     "name": "Naiya",
     "img": "/assets/execs/naiya.jpg",
     "degree": "First Year Data Science",
-    "description": "Loves to bake / Scared of clowns!"
+    "description": "Loves to bake / Scared of clowns!",
+    "imgs": [
+        {
+            "path": "/assets/execs/naiya.jpg",
+            "alt": "Naiya"
+        },
+        {
+            "path": "/assets/execs/naiya-2.jpg",
+            "alt": "Naiya"
+        }
+    ]
 }

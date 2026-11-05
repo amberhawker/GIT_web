@@ -29,11 +29,16 @@ const execs = defineCollection({
     schema: z.object({
         role: z.string(),
         name: z.string(),
-        // img should be normalized to one std, web-friendly & highly compatible filetype. not required
+        // primary fallback; prefer imgs when present
         img: z.string().default('/assets/execs/placeholder.jpg'),
+        imgs: z.array(
+            z.object({
+                path: z.string(),
+                alt: z.string().optional(),
+            })
+        ).optional(),
         degree: z.string(),
         description: z.string()
-
     })
 });
 

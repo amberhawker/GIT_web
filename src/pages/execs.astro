@@ -16,6 +16,7 @@ const allExecs = await getCollection("execs");
                 role={exec.data.role}
                 name={exec.data.name}
                 img={exec.data.img}
+                imgs={exec.data.imgs}
                 degree={exec.data.degree}
                 description={exec.data.description}
             />
@@ -25,8 +26,35 @@ const allExecs = await getCollection("execs");
 
 <script>
     import { createDraggable } from 'animejs';
-    const execs = document.querySelectorAll('.exec-card');
-    execs.forEach(exec => {
-        createDraggable(exec);
-    });
+
+    const setupExecCards = () => {
+        document.querySelectorAll<HTMLElement>('.exec-card').forEach((card) => {
+            if (card.dataset.stackInit) return;
+            card.dataset.stackInit = 'true';
+
+            createDraggable(card);
+
+            const stack = card.querySelector('.photo-stack');
+            const nextBtn = card.querySelector('.next-btn');
+            // Keep the next-photo control out of the card drag gesture —
+            // otherwise the first click is eaten by createDraggable.
+            const stopDrag = (e: Event) => e.stopPropagation();
+            nextBtn?.addEventListener('pointerdown', stopDrag);
+            nextBtn?.addEventListener('mousedown', stopDrag);
+            nextBtn?.addEventListener('touchstart', stopDrag, { passive: true });
+            nextBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (stack?.firstElementChild) {
+                    stack.appendChild(stack.firstElementChild);
+                }
+            });
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupExecCards);
+    } else {
+        setupExecCards();
+    }
+    document.addEventListener('astro:page-load', setupExecCards);
 </script>

@@ -3,5 +3,15 @@
     "name": "Livia",
     "img": "/assets/execs/livia.jpg",
     "degree": "Second Year Computer Science",
-    "description": "Enjoys drawing, playing volleyball, and travelling!!"
+    "description": "Enjoys drawing, playing volleyball, and travelling!!",
+    "imgs": [
+        {
+            "path": "/assets/execs/livia.jpg",
+            "alt": "Livia"
+        },
+        {
+            "path": "/assets/execs/livia-2.jpg",
+            "alt": "Livia"
+        }
+    ]
 }

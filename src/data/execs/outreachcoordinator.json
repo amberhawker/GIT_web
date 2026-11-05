@@ -3,5 +3,15 @@
     "name": "Thien-Nhi",
     "img": "/assets/execs/thien-nhi.jpg",
     "degree": "Fourth Year Data Science",
-    "description": "Enjoys skiing and live music!"
+    "description": "Enjoys skiing and live music!",
+    "imgs": [
+        {
+            "path": "/assets/execs/thien-nhi.jpg",
+            "alt": "Thien-Nhi"
+        },
+        {
+            "path": "/assets/execs/thien-nhi-2.jpg",
+            "alt": "Thien-Nhi"
+        }
+    ]
 }

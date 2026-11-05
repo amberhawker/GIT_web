@@ -3,5 +3,11 @@
     "name": "Barha Kainth",
     "img": "/assets/execs/barha-kainth.jpg",
     "degree": "Final Year Computer Science",
-    "description": "Enjoys travelling and movies!!"
+    "description": "Enjoys travelling and movies!!",
+    "imgs": [
+        {
+            "path": "/assets/execs/barha-kainth.jpg",
+            "alt": "Barha Kainth"
+        }
+    ]
 }

@@ -3,5 +3,19 @@
     "name": "Lan So",
     "img": "/assets/execs/lan-so.jpg",
     "degree": "Second Year Comp Sci, Minor in Commerce",
-    "description": "Huge fan of music, fashion and art :)"
+    "description": "Huge fan of music, fashion and art :)",
+    "imgs": [
+        {
+            "path": "/assets/execs/lan-so.jpg",
+            "alt": "Lan So"
+        },
+        {
+            "path": "/assets/execs/lan-so-2.jpg",
+            "alt": "Lan So"
+        },
+        {
+            "path": "/assets/execs/lan-so-3.jpg",
+            "alt": "Lan So"
+        }
+    ]
 }

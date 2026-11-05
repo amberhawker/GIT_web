@@ -1,10 +1,16 @@
 ---
 import { Image } from 'astro:assets';
 
+interface Img {
+  path: string;
+  alt?: string;
+}
+
 interface Props {
   role: string,
   name: string,
-  img: string,
+  img?: string,
+  imgs?: Array<Img>,
   degree: string,
   description: string
 }
@@ -13,24 +19,40 @@ const {
   role = "",
   name = "",
   img = "/assets/execs/placeholder.jpg",
+  imgs,
   degree = "",
   description = ""
 } = Astro.props;
 
+const photos: Img[] = (imgs && imgs.length)
+  ? imgs
+  : [{ path: img, alt: name }];
+const multi = photos.length > 1;
 ---
 
 <div class="exec-card mockup-window bg-base-100 border border-base-300 w-full h-full flex flex-col justify-between" data-title={name ? `${name} - ${role}` : (role || "Girls in Tech")}>
     <div class="flex flex-col sm:flex-row items-center sm:items-start md:items-center justify-start gap-4 sm:gap-6 p-4 sm:p-5 md:p-6 flex-1">
         <div class="relative w-24 h-32 sm:w-28 sm:h-[9.33rem] md:w-32 md:h-[10.67rem] shrink-0 aspect-[3/4] self-center sm:self-start md:self-center">
             <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
-                <Image
-                    alt={name}
-                    src={img}
-                    width={450}
-                    height={600}
-                    class="rounded-box w-full h-full object-cover object-top"
-                />
+                {photos.map((photo) => (
+                    <Image
+                        alt={photo.alt || name}
+                        src={photo.path}
+                        width={450}
+                        height={600}
+                        class="rounded-box w-full h-full object-cover object-top"
+                    />
+                ))}
             </div>
+            {multi && (
+                <button
+                    type="button"
+                    class="next-btn btn btn-primary btn-xs absolute bottom-1.5 right-1.5 z-20 shadow-md min-h-0 h-7 w-7 p-0"
+                    aria-label={`Next photo of ${name || role}`}
+                >
+                    ❯
+                </button>
+            )}
         </div>
         <div class="flex flex-col justify-center text-center sm:text-left flex-1 min-w-0">
             <h3 class="text-xl sm:text-2xl font-bold mb-1 leading-snug">{role}</h3>

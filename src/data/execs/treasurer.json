@@ -3,5 +3,15 @@
     "name": "Jessie Beggs",
     "img": "/assets/execs/jessie-beggs.jpg",
     "degree": "Third Year Computer Science",
-    "description": "Loves spending quality time with her favourite people. You'll usually find her with an iced coffee in hand!"
+    "description": "Loves spending quality time with her favourite people. You'll usually find her with an iced coffee in hand!",
+    "imgs": [
+        {
+            "path": "/assets/execs/jessie-beggs.jpg",
+            "alt": "Jessie Beggs"
+        },
+        {
+            "path": "/assets/execs/jessie-beggs-2.jpg",
+            "alt": "Jessie Beggs"
+        }
+    ]
 }

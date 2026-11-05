@@ -3,5 +3,15 @@
     "name": "Amber Hawker",
     "img": "/assets/execs/amber-hawker.jpg",
     "degree": "Second Year Computer Science",
-    "description": "Enjoys working on interesting technical challenges & meeting new people. You might see her bouncing between tasks and chatting at the same time."
+    "description": "Enjoys working on interesting technical challenges & meeting new people. You might see her bouncing between tasks and chatting at the same time.",
+    "imgs": [
+        {
+            "path": "/assets/execs/amber-hawker.jpg",
+            "alt": "Amber Hawker"
+        },
+        {
+            "path": "/assets/execs/amber-hawker-2.jpg",
+            "alt": "Amber Hawker"
+        }
+    ]
 }
