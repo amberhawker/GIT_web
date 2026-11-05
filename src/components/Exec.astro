@@ -21,14 +21,14 @@ const {
 
 <div class="exec-card mockup-window bg-base-100 border border-base-300 w-full h-full flex flex-col justify-between" data-title={name ? `${name} - ${role}` : (role || "Girls in Tech")}>
     <div class="flex flex-col sm:flex-row items-center sm:items-start md:items-center justify-start gap-4 sm:gap-6 p-4 sm:p-5 md:p-6 flex-1">
-        <div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 shrink-0 aspect-square self-center sm:self-start md:self-center">
+        <div class="relative w-24 h-32 sm:w-28 sm:h-[9.33rem] md:w-32 md:h-[10.67rem] shrink-0 aspect-[3/4] self-center sm:self-start md:self-center">
             <div class="photo-stack stack w-full h-full bg-base-300 rounded-box shadow-md">
                 <Image
                     alt={name}
                     src={img}
-                    width={400}
-                    height={400}
-                    class="rounded-box w-full h-full object-cover"
+                    width={450}
+                    height={600}
+                    class="rounded-box w-full h-full object-cover object-top"
                 />
             </div>
         </div>

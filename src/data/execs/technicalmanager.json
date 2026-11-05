@@ -1,6 +1,7 @@
 {
     "role": "Technical Manager",
     "name": "Amber Hawker",
-    "degree": "2nd year Computer Science",
-    "description": "is freaking awesome & made the website"
+    "img": "/assets/execs/amber-hawker.jpg",
+    "degree": "Second Year Computer Science",
+    "description": "Enjoys working on interesting technical challenges & meeting new people. You might see her bouncing between tasks and chatting at the same time."
 }

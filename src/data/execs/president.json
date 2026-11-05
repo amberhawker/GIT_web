@@ -1,6 +1,7 @@
 {
     "role": "President",
     "name": "Barha Kainth",
-    "degree": "probs Computer Science",
-    "description": "!!!!!"
+    "img": "/assets/execs/barha-kainth.jpg",
+    "degree": "Final Year Computer Science",
+    "description": "Enjoys travelling and movies!!"
 }
