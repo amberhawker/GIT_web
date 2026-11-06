@@ -13,7 +13,7 @@ const sponsors = await getCollection("sponsors");
 <Layout>
 	<div class="hero bg-base-200 min-h-[82vh] relative overflow-hidden py-10 md:py-16">
 		<!-- Cute Mini Desktop Icons (Sticky corner on desktop, quick launcher on mobile) -->
-		<div class="desktop-shortcuts z-20 flex lg:flex-col flex-row gap-5 lg:gap-6 justify-center items-center lg:absolute lg:top-16 lg:left-8 mb-6 lg:mb-0">
+		<div class="desktop-shortcuts absolute z-20 top-16 left-8 hidden lg:flex flex-col gap-6 items-center">
 			<!-- about.txt -->
 			<a
 				href="#about-us"
@@ -77,7 +77,7 @@ const sponsors = await getCollection("sponsors");
 
 		<div class="hero-content flex-col lg:flex-row gap-8 lg:gap-14 relative z-10 px-4">
 			<!-- Logo Artwork with subtle separation glow -->
-			<div class="relative max-w-lg w-full flex justify-center items-center">
+			<div class="relative max-w-lg w-full flex justify-center items-center mt-10 sm:mt-12 md:mt-6 lg:mt-0">
 				<div class="pointer-events-none absolute -inset-6 bg-white/35 rounded-full blur-2xl"></div>
 				<Image
 					alt="Girls in Tech UBC Okanagan"
