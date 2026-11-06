@@ -274,3 +274,16 @@ p {
   animation: float-gentle 4s ease-in-out infinite;
   animation-delay: 2s;
 }
+
+/* Exec photo stack: behind photos peek bottom-right (DaisyUI default is bottom-only) */
+.exec-card .photo-stack.stack > * {
+  grid-area: 3 / 3 / 6 / 6;
+}
+
+.exec-card .photo-stack.stack > *:nth-child(2) {
+  grid-area: 2 / 2 / 5 / 5;
+}
+
+.exec-card .photo-stack.stack > *:first-child {
+  grid-area: 1 / 1 / 4 / 4;
+}
