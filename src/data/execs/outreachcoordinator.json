@@ -6,11 +6,11 @@
     "description": "Enjoys skiing and live music!",
     "imgs": [
         {
-            "path": "/assets/execs/thien-nhi.jpg",
+            "path": "/assets/execs/thien-nhi-2.jpg",
             "alt": "Thien-Nhi"
         },
         {
-            "path": "/assets/execs/thien-nhi-2.jpg",
+            "path": "/assets/execs/thien-nhi-3.jpg",
             "alt": "Thien-Nhi"
         }
     ]
