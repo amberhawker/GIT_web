@@ -2,21 +2,18 @@
 export const prerender = false;
 
 import Layout from '../../layouts/Layout.astro';
+import '../../styles/admin.css';
 
 const authed = Astro.locals.adminAuthed;
 ---
 
 <Layout title="Admin">
-	<main class="admin-page relative z-10 mx-auto max-w-6xl px-4 py-8 sm:py-12">
-		<header class="mb-8 flex flex-wrap items-start justify-between gap-4 border-b-2 border-base-content pb-6">
+	<main class="admin-page">
+		<header class="admin-header">
 			<div>
-				<p class="font-mono text-xs font-bold tracking-wide text-base-content/55 mb-1">
-					UBCO Girls in Tech
-				</p>
-				<h1 class="font-header text-4xl sm:text-5xl font-bold tracking-tight">Admin</h1>
-				<p class="text-sm text-base-content/65 mt-2 max-w-md">
-					Edit events, team, and gallery. Pushed to Github on save.
-				</p>
+				<p class="admin-kicker">UBCO Girls in Tech</p>
+				<h1 class="admin-title">Admin</h1>
+				<p class="admin-subtitle">Edit events, team, and gallery. Pushed to Github on save.</p>
 			</div>
 			{
 				authed && (
@@ -29,13 +26,10 @@ const authed = Astro.locals.adminAuthed;
 
 		{
 			!authed ? (
-				<form
-					id="login-form"
-					class="mx-auto max-w-md space-y-5 border-2 border-base-content bg-base-100 p-6 sm:p-8 shadow-[4px_4px_0_#3d0824]"
-				>
-					<p class="text-base-content/70 text-sm">Enter the shared site password.</p>
-					<label class="flex flex-col gap-1.5 w-full">
-						<span class="font-mono text-xs font-bold">Password</span>
+				<form id="login-form" class="admin-login">
+					<p class="admin-status">Enter the shared site password.</p>
+					<label class="admin-field">
+						<span class="admin-label">Password</span>
 						<input
 							type="password"
 							name="password"
@@ -44,224 +38,148 @@ const authed = Astro.locals.adminAuthed;
 							class="admin-input"
 						/>
 					</label>
-					<p id="login-error" class="text-error text-sm hidden"></p>
+					<p id="login-error" class="admin-status is-err hidden"></p>
 					<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 						Log in
 					</button>
 				</form>
 			) : (
-				<div id="admin-dashboard" class="space-y-6">
-					<div
-						role="tablist"
-						class="flex flex-wrap gap-1 border-b-2 border-base-content/20"
-						aria-label="Admin sections"
-					>
-						<button
-							type="button"
-							role="tab"
-							class="admin-tab tab-active px-4 py-2.5 font-mono text-sm font-bold border-b-2 border-transparent -mb-[2px] transition-colors"
-							data-tab="events"
-							aria-selected="true"
-						>
+				<div id="admin-dashboard" class="admin-dashboard">
+					<div role="tablist" class="admin-tabs" aria-label="Admin sections">
+						<button type="button" role="tab" class="admin-tab tab-active" data-tab="events" aria-selected="true">
 							Events
 						</button>
-						<button
-							type="button"
-							role="tab"
-							class="admin-tab px-4 py-2.5 font-mono text-sm font-bold border-b-2 border-transparent -mb-[2px] text-base-content/50 transition-colors"
-							data-tab="execs"
-							aria-selected="false"
-						>
+						<button type="button" role="tab" class="admin-tab" data-tab="execs" aria-selected="false">
 							Team
 						</button>
-						<button
-							type="button"
-							role="tab"
-							class="admin-tab px-4 py-2.5 font-mono text-sm font-bold border-b-2 border-transparent -mb-[2px] text-base-content/50 transition-colors"
-							data-tab="gallery"
-							aria-selected="false"
-						>
+						<button type="button" role="tab" class="admin-tab" data-tab="gallery" aria-selected="false">
 							Gallery
 						</button>
 					</div>
 
-					<section data-panel="events" class="space-y-4">
-						<div class="grid gap-6 lg:grid-cols-[minmax(260px,300px)_minmax(0,1fr)] lg:items-start">
-							<aside class="admin-picker flex flex-col gap-3">
-								<label class="flex flex-col gap-1.5">
-									<span class="font-mono text-xs font-bold">Select event</span>
-									<select id="events-select" class="admin-select"></select>
-								</label>
-								<div class="flex items-center gap-2">
-									<button id="event-new" type="button" class="btn btn-sm btn-tactile font-mono">
-										New
-									</button>
-									<button
-										id="event-delete"
-										type="button"
-										class="btn btn-sm btn-ghost text-error font-mono"
-									>
-										Delete
-									</button>
-								</div>
-								<div
-									id="events-list"
-									class="admin-item-list min-h-48 max-h-[min(28rem,55vh)] overflow-y-auto border-2 border-base-content bg-white shadow-[3px_3px_0_#3d0824]"
-									role="listbox"
-									aria-label="Events"
-								></div>
-								<p id="events-status" class="text-xs font-mono text-base-content/60">Loading…</p>
-							</aside>
-
-							<form id="event-form" class="admin-form">
-								<label class="admin-field">
-									<span class="admin-label">id (filename)</span>
-									<input name="id" class="admin-input" required placeholder="hackattack" />
-								</label>
-								<label class="admin-field">
-									<span class="admin-label">title</span>
-									<input name="title" class="admin-input" required />
-								</label>
-								<label class="admin-field">
-									<span class="admin-label">date</span>
-									<input name="date" class="admin-input" />
-								</label>
-								<label class="admin-field admin-field-check">
-									<span class="admin-label">featured</span>
-									<span class="admin-check-row">
-										<input name="featured" type="checkbox" class="checkbox border-2 border-base-content" />
-										<span class="font-mono text-xs">Show on homepage</span>
-									</span>
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">description</span>
-									<textarea name="description" class="admin-textarea min-h-28"></textarea>
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">images (one per line: path | alt)</span>
-									<textarea
-										name="imgs"
-										class="admin-textarea min-h-28 font-mono text-sm"
-										placeholder="/assets/events/hackattack.png | Hack Attack"
-									></textarea>
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">upload images (optional)</span>
-									<input
-										name="files"
-										type="file"
-										accept="image/*"
-										multiple
-										class="admin-file"
-									/>
-								</label>
-								<div class="admin-field-full">
-									<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
-										Save event
-									</button>
-								</div>
-							</form>
-						</div>
-					</section>
-
-					<section data-panel="execs" class="hidden space-y-4">
-						<div class="grid gap-6 lg:grid-cols-[minmax(260px,300px)_minmax(0,1fr)] lg:items-start">
-							<aside class="admin-picker flex flex-col gap-3">
-								<label class="flex flex-col gap-1.5">
-									<span class="font-mono text-xs font-bold">Select team member</span>
-									<select id="execs-select" class="admin-select"></select>
-								</label>
-								<div class="flex items-center gap-2">
-									<button id="exec-new" type="button" class="btn btn-sm btn-tactile font-mono">
-										New
-									</button>
-									<button
-										id="exec-delete"
-										type="button"
-										class="btn btn-sm btn-ghost text-error font-mono"
-									>
-										Delete
-									</button>
-								</div>
-								<div
-									id="execs-list"
-									class="admin-item-list min-h-48 max-h-[min(28rem,55vh)] overflow-y-auto border-2 border-base-content bg-white shadow-[3px_3px_0_#3d0824]"
-									role="listbox"
-									aria-label="Team members"
-								></div>
-								<p id="execs-status" class="text-xs font-mono text-base-content/60">Loading…</p>
-							</aside>
-
-							<form id="exec-form" class="admin-form">
-								<label class="admin-field">
-									<span class="admin-label">id (filename)</span>
-									<input name="id" class="admin-input" required placeholder="president" />
-								</label>
-								<label class="admin-field">
-									<span class="admin-label">role</span>
-									<input name="role" class="admin-input" required />
-								</label>
-								<label class="admin-field">
-									<span class="admin-label">name</span>
-									<input name="name" class="admin-input" required />
-								</label>
-								<label class="admin-field">
-									<span class="admin-label">degree</span>
-									<input name="degree" class="admin-input" required />
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">description</span>
-									<textarea name="description" class="admin-textarea min-h-24" required></textarea>
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">primary img path</span>
-									<input
-										name="img"
-										class="admin-input font-mono text-sm"
-										placeholder="/assets/execs/name.jpg"
-									/>
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">imgs stack (one per line: path | alt)</span>
-									<textarea name="imgs" class="admin-textarea min-h-28 font-mono text-sm"></textarea>
-								</label>
-								<label class="admin-field admin-field-full">
-									<span class="admin-label">upload images (optional)</span>
-									<input
-										name="files"
-										type="file"
-										accept="image/*"
-										multiple
-										class="admin-file"
-									/>
-								</label>
-								<div class="admin-field-full">
-									<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
-										Save exec
-									</button>
-								</div>
-							</form>
-						</div>
-					</section>
-
-					<section data-panel="gallery" class="hidden space-y-6">
-						<p id="gallery-status" class="text-xs font-mono text-base-content/60"></p>
-						<form id="gallery-form" class="admin-form admin-form-upload">
-							<label class="admin-field admin-upload-field">
-								<span class="admin-label">upload images</span>
-								<input
-									name="files"
-									type="file"
-									accept="image/*"
-									multiple
-									class="admin-file"
-								/>
+					<section data-panel="events" class="admin-panel">
+						<div class="admin-toolbar">
+							<label class="admin-toolbar-select">
+								<span class="admin-label">Select event</span>
+								<select id="events-select" class="admin-select"></select>
 							</label>
-							<div class="admin-upload-actions">
-								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
-									Upload
+							<div class="admin-toolbar-actions">
+								<button id="event-new" type="button" class="btn btn-sm btn-tactile font-mono">New</button>
+								<button id="event-delete" type="button" class="btn btn-sm btn-ghost text-error font-mono">
+									Delete
 								</button>
 							</div>
+						</div>
+						<p id="events-status" class="admin-status">Loading…</p>
+						<form id="event-form" class="admin-form">
+							<label class="admin-field">
+								<span class="admin-label">id (filename)</span>
+								<input name="id" class="admin-input" required placeholder="hackattack" />
+							</label>
+							<label class="admin-field">
+								<span class="admin-label">title</span>
+								<input name="title" class="admin-input" required />
+							</label>
+							<label class="admin-field">
+								<span class="admin-label">date</span>
+								<input name="date" class="admin-input" />
+							</label>
+							<label class="admin-field admin-field-check">
+								<span class="admin-label">featured</span>
+								<span class="admin-check-row">
+									<input name="featured" type="checkbox" class="checkbox border-2 border-base-content" />
+									<span class="admin-label admin-muted">Show on homepage</span>
+								</span>
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">description</span>
+								<textarea name="description" class="admin-textarea"></textarea>
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">images (one per line: path | alt)</span>
+								<textarea
+									name="imgs"
+									class="admin-textarea font-mono text-sm"
+									placeholder="/assets/events/hackattack.png | Hack Attack"
+								></textarea>
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">upload images (optional)</span>
+								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+							</label>
+							<div class="admin-field-full">
+								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
+									Save event
+								</button>
+							</div>
+						</form>
+					</section>
+
+					<section data-panel="execs" class="admin-panel hidden">
+						<div class="admin-toolbar">
+							<label class="admin-toolbar-select">
+								<span class="admin-label">Select team member</span>
+								<select id="execs-select" class="admin-select"></select>
+							</label>
+							<div class="admin-toolbar-actions">
+								<button id="exec-new" type="button" class="btn btn-sm btn-tactile font-mono">New</button>
+								<button id="exec-delete" type="button" class="btn btn-sm btn-ghost text-error font-mono">
+									Delete
+								</button>
+							</div>
+						</div>
+						<p id="execs-status" class="admin-status">Loading…</p>
+						<form id="exec-form" class="admin-form">
+							<label class="admin-field">
+								<span class="admin-label">id (filename)</span>
+								<input name="id" class="admin-input" required placeholder="president" />
+							</label>
+							<label class="admin-field">
+								<span class="admin-label">role</span>
+								<input name="role" class="admin-input" required />
+							</label>
+							<label class="admin-field">
+								<span class="admin-label">name</span>
+								<input name="name" class="admin-input" required />
+							</label>
+							<label class="admin-field">
+								<span class="admin-label">degree</span>
+								<input name="degree" class="admin-input" required />
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">description</span>
+								<textarea name="description" class="admin-textarea admin-textarea-sm" required></textarea>
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">primary img path</span>
+								<input name="img" class="admin-input font-mono text-sm" placeholder="/assets/execs/name.jpg" />
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">imgs stack (one per line: path | alt)</span>
+								<textarea name="imgs" class="admin-textarea font-mono text-sm"></textarea>
+							</label>
+							<label class="admin-field admin-field-full">
+								<span class="admin-label">upload images (optional)</span>
+								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+							</label>
+							<div class="admin-field-full">
+								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
+									Save exec
+								</button>
+							</div>
+						</form>
+					</section>
+
+					<section data-panel="gallery" class="admin-panel admin-panel-gallery hidden">
+						<p id="gallery-status" class="admin-status"></p>
+						<form id="gallery-form" class="admin-form admin-form-upload">
+							<label class="admin-field">
+								<span class="admin-label">upload images</span>
+								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+							</label>
+							<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
+								Upload
+							</button>
 						</form>
 						<div id="gallery-grid" class="admin-gallery-grid"></div>
 					</section>
@@ -271,274 +189,19 @@ const authed = Astro.locals.adminAuthed;
 	</main>
 </Layout>
 
-<style>
-	.admin-tab.tab-active {
-		border-bottom-color: var(--color-base-content);
-		color: var(--color-base-content);
-	}
-
-	.admin-form {
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 1rem 1.25rem;
-		align-content: start;
-		border: 2px solid var(--color-base-content);
-		background: color-mix(in srgb, var(--color-base-100) 80%, white);
-		padding: 1.25rem;
-		box-shadow: 3px 3px 0 var(--color-base-content);
-	}
-
-	.admin-form-upload {
-		grid-template-columns: 1fr;
-		align-items: end;
-	}
-
-	@media (min-width: 768px) {
-		.admin-form:not(.admin-form-upload) {
-			grid-template-columns: 1fr 1fr;
-			padding: 1.5rem;
-		}
-
-		.admin-form-upload {
-			grid-template-columns: minmax(0, 1fr) auto;
-			gap: 1rem 1.25rem;
-			padding: 1.25rem 1.5rem;
-		}
-	}
-
-	.admin-upload-field {
-		min-width: 0;
-	}
-
-	.admin-upload-actions {
-		display: flex;
-		align-items: end;
-		padding-bottom: 0.05rem;
-	}
-
-	.admin-gallery-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
-		gap: 1.25rem;
-	}
-
-	@media (min-width: 640px) {
-		.admin-gallery-grid {
-			gap: 1.5rem;
-		}
-	}
-
-	:global(.admin-gallery-card) {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		padding: 0.75rem;
-		border: 2px solid var(--color-base-content);
-		background: #fff;
-		box-shadow: 3px 3px 0 var(--color-base-content);
-		min-width: 0;
-	}
-
-	:global(.admin-gallery-thumb) {
-		aspect-ratio: 1;
-		overflow: hidden;
-		background: var(--color-base-200);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid color-mix(in srgb, var(--color-base-content) 20%, transparent);
-	}
-
-	:global(.admin-gallery-thumb img) {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
-	}
-
-	:global(.admin-gallery-thumb.is-missing) {
-		padding: 0.75rem;
-		font-family: var(--font-body);
-		font-size: 0.7rem;
-		color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
-		text-align: center;
-		word-break: break-all;
-	}
-
-	:global(.admin-gallery-meta) {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-		min-width: 0;
-	}
-
-	:global(.admin-gallery-name) {
-		margin: 0;
-		font-family: var(--font-body);
-		font-size: 0.75rem;
-		line-height: 1.3;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	:global(.admin-gallery-delete) {
-		align-self: flex-start;
-		border: 0;
-		background: transparent;
-		padding: 0;
-		font-family: var(--font-body);
-		font-size: 0.75rem;
-		color: #b42318;
-		cursor: pointer;
-		text-decoration: underline;
-		text-underline-offset: 2px;
-	}
-
-	:global(.admin-gallery-delete:hover) {
-		color: #7a1510;
-	}
-
-	.admin-field {
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-		min-width: 0;
-	}
-
-	.admin-field-full {
-		grid-column: 1 / -1;
-	}
-
-	.admin-field-check {
-		justify-content: flex-end;
-	}
-
-	.admin-label {
-		font-family: var(--font-body);
-		font-size: 0.75rem;
-		font-weight: 700;
-		line-height: 1.2;
-		color: var(--color-base-content);
-	}
-
-	.admin-check-row {
-		display: flex;
-		align-items: center;
-		gap: 0.55rem;
-		min-height: 2.75rem;
-		padding: 0 0.15rem;
-	}
-
-	.admin-input,
-	.admin-textarea,
-	.admin-select,
-	.admin-file {
-		width: 100%;
-		min-width: 0;
-		border: 2px solid var(--color-base-content);
-		background: #fff;
-		color: var(--color-base-content);
-		font-family: var(--font-body);
-		font-size: 0.875rem;
-		line-height: 1.35;
-		border-radius: 0;
-		box-shadow: none;
-	}
-
-	.admin-input,
-	.admin-select,
-	.admin-file {
-		height: 2.75rem;
-		padding: 0 0.75rem;
-	}
-
-	.admin-textarea {
-		padding: 0.7rem 0.75rem;
-		resize: vertical;
-	}
-
-	.admin-select {
-		appearance: auto;
-		cursor: pointer;
-	}
-
-	.admin-input:focus,
-	.admin-textarea:focus,
-	.admin-select:focus,
-	.admin-file:focus {
-		outline: 2px solid var(--color-base-content);
-		outline-offset: 2px;
-	}
-
-	.admin-item-list :global(.admin-item) {
-		display: block;
-		width: 100%;
-		text-align: left;
-		padding: 0.7rem 0.85rem;
-		border: 0;
-		border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 18%, transparent);
-		background: transparent;
-		color: var(--color-base-content);
-		font-family: var(--font-body);
-		font-size: 0.8rem;
-		line-height: 1.35;
-		cursor: pointer;
-		transition: background-color 0.12s ease;
-	}
-
-	.admin-item-list :global(.admin-item:last-child) {
-		border-bottom: 0;
-	}
-
-	.admin-item-list :global(.admin-item:hover) {
-		background: color-mix(in srgb, var(--color-base-200) 70%, white);
-	}
-
-	.admin-item-list :global(.admin-item.is-selected) {
-		background: var(--color-base-content);
-		color: #fff;
-	}
-
-	.admin-item-list :global(.admin-item-title) {
-		display: block;
-		font-weight: 700;
-	}
-
-	.admin-item-list :global(.admin-item-meta) {
-		display: block;
-		opacity: 0.65;
-		font-size: 0.7rem;
-		margin-top: 0.15rem;
-	}
-
-	.admin-item-list :global(.admin-item.is-selected .admin-item-meta) {
-		opacity: 0.8;
-	}
-
-	.admin-item-list :global(.admin-item-empty) {
-		padding: 1rem;
-		font-size: 0.8rem;
-		opacity: 0.55;
-		font-family: var(--font-body);
-	}
-</style>
-
 <script>
-	const form = document.getElementById('login-form') as HTMLFormElement | null;
-	const errorEl = document.getElementById('login-error');
+	import { initAdminDashboard } from '../../components/admin/admin-client';
+
+	const loginForm = document.getElementById('login-form') as HTMLFormElement | null;
+	const loginError = document.getElementById('login-error');
 	const logoutBtn = document.getElementById('logout-btn');
 
-	form?.addEventListener('submit', async (event) => {
+	loginForm?.addEventListener('submit', async (event) => {
 		event.preventDefault();
-		if (errorEl) {
-			errorEl.classList.add('hidden');
-			errorEl.textContent = '';
-		}
+		loginError?.classList.add('hidden');
+		if (loginError) loginError.textContent = '';
 
-		const data = new FormData(form);
-		const password = String(data.get('password') ?? '');
-
+		const password = String(new FormData(loginForm).get('password') ?? '');
 		const res = await fetch('/api/admin/login', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -547,13 +210,12 @@ const authed = Astro.locals.adminAuthed;
 
 		if (!res.ok) {
 			const body = (await res.json().catch(() => ({}))) as { error?: string };
-			if (errorEl) {
-				errorEl.textContent = body.error ?? 'Login failed';
-				errorEl.classList.remove('hidden');
+			if (loginError) {
+				loginError.textContent = body.error ?? 'Login failed';
+				loginError.classList.remove('hidden');
 			}
 			return;
 		}
-
 		window.location.reload();
 	});
 
@@ -561,10 +223,6 @@ const authed = Astro.locals.adminAuthed;
 		await fetch('/api/admin/logout', { method: 'POST' });
 		window.location.reload();
 	});
-</script>
-
-<script>
-	import { initAdminDashboard } from '../../components/admin/admin-client';
 
 	const root = document.getElementById('admin-dashboard');
 	if (root) initAdminDashboard(root);

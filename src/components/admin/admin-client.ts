@@ -17,27 +17,17 @@ type ExecData = {
 	description: string;
 };
 
-type GalleryImage = { name: string; path: string };
-
 type CommitInfo = { sha?: string; htmlUrl?: string; message?: string };
-
 type ListItem = { id: string; title: string; meta?: string };
+type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
-async function api<T>(
-	path: string,
-	init?: RequestInit
-): Promise<{ ok: true; data: T } | { ok: false; error: string; status: number }> {
+async function api<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
 	const res = await fetch(path, {
 		...init,
-		headers: {
-			'Content-Type': 'application/json',
-			...(init?.headers ?? {}),
-		},
+		headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
 	});
 	const body = (await res.json().catch(() => ({}))) as T & { error?: string };
-	if (!res.ok) {
-		return { ok: false, error: body.error ?? `Request failed (${res.status})`, status: res.status };
-	}
+	if (!res.ok) return { ok: false, error: body.error ?? `Request failed (${res.status})` };
 	return { ok: true, data: body as T };
 }
 
@@ -46,27 +36,31 @@ function fileToBase64(file: File): Promise<string> {
 		const reader = new FileReader();
 		reader.onload = () => {
 			const result = String(reader.result ?? '');
-			const base64 = result.includes(',') ? result.split(',')[1] : result;
-			resolve(base64);
+			resolve(result.includes(',') ? result.split(',')[1] : result);
 		};
 		reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
 		reader.readAsDataURL(file);
 	});
 }
 
+async function collectUploads(input: HTMLInputElement) {
+	const files = [];
+	for (const file of Array.from(input.files ?? [])) {
+		files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
+	}
+	return files;
+}
+
 function setStatus(el: HTMLElement | null, message: string, kind: 'info' | 'ok' | 'err' = 'info') {
 	if (!el) return;
 	el.textContent = message;
-	el.classList.remove('text-success', 'text-error', 'text-base-content/60');
-	if (kind === 'ok') el.classList.add('text-success');
-	else if (kind === 'err') el.classList.add('text-error');
-	else el.classList.add('text-base-content/60');
+	el.classList.toggle('is-ok', kind === 'ok');
+	el.classList.toggle('is-err', kind === 'err');
 }
 
 function commitNote(commit?: CommitInfo): string {
 	if (!commit?.sha) return 'Saved.';
-	const short = commit.sha.slice(0, 7);
-	return `Saved (${short}). Site updates after Cloudflare rebuild.`;
+	return `Saved (${commit.sha.slice(0, 7)}). Site updates after Cloudflare rebuild.`;
 }
 
 function qs<T extends HTMLElement>(root: ParentNode, selector: string): T {
@@ -75,32 +69,12 @@ function qs<T extends HTMLElement>(root: ParentNode, selector: string): T {
 	return el as T;
 }
 
-function switchTab(root: HTMLElement, tab: string) {
-	root.querySelectorAll('[data-tab]').forEach((btn) => {
-		const active = btn.getAttribute('data-tab') === tab;
-		btn.classList.toggle('tab-active', active);
-		btn.setAttribute('aria-selected', active ? 'true' : 'false');
-		btn.classList.toggle('text-base-content/50', !active);
-	});
-	root.querySelectorAll('[data-panel]').forEach((panel) => {
-		const match = panel.getAttribute('data-panel') === tab;
-		(panel as HTMLElement).classList.toggle('hidden', !match);
-	});
-}
-
 function parseImgs(text: string): ImgRef[] | string {
-	const lines = text
-		.split('\n')
-		.map((l) => l.trim())
-		.filter(Boolean);
 	const imgs: ImgRef[] = [];
-	for (const line of lines) {
+	for (const line of text.split('\n').map((l) => l.trim()).filter(Boolean)) {
 		const [path, ...altParts] = line.split('|');
 		if (!path?.trim()) return 'Each image line needs a path';
-		imgs.push({
-			path: path.trim(),
-			alt: altParts.join('|').trim() || undefined,
-		});
+		imgs.push({ path: path.trim(), alt: altParts.join('|').trim() || undefined });
 	}
 	return imgs;
 }
@@ -109,18 +83,13 @@ function formatImgs(imgs: ImgRef[] | undefined): string {
 	return (imgs ?? []).map((img) => (img.alt ? `${img.path} | ${img.alt}` : img.path)).join('\n');
 }
 
-function renderSelect(select: HTMLSelectElement, items: ListItem[], selectedId: string | null) {
+function fillSelect(select: HTMLSelectElement, items: ListItem[], selectedId: string | null) {
 	select.innerHTML = '';
-
 	if (items.length === 0) {
-		const opt = document.createElement('option');
-		opt.value = '';
-		opt.textContent = 'No items yet';
-		select.appendChild(opt);
+		select.innerHTML = '<option value="">No items yet</option>';
 		select.disabled = true;
 		return;
 	}
-
 	select.disabled = false;
 	for (const item of items) {
 		const opt = document.createElement('option');
@@ -131,56 +100,18 @@ function renderSelect(select: HTMLSelectElement, items: ListItem[], selectedId: 
 	select.value = selectedId && items.some((i) => i.id === selectedId) ? selectedId : items[0].id;
 }
 
-function renderItemList(
-	container: HTMLElement,
-	items: ListItem[],
-	selectedId: string | null,
-	onSelect: (id: string) => void,
-	emptyMessage = 'Nothing here yet.'
-) {
-	container.innerHTML = '';
-	if (items.length === 0) {
-		const empty = document.createElement('p');
-		empty.className = 'admin-item-empty';
-		empty.textContent = emptyMessage;
-		container.appendChild(empty);
-		return;
-	}
-
-	for (const item of items) {
-		const btn = document.createElement('button');
-		btn.type = 'button';
-		btn.className = `admin-item${item.id === selectedId ? ' is-selected' : ''}`;
-		btn.setAttribute('role', 'option');
-		btn.setAttribute('aria-selected', item.id === selectedId ? 'true' : 'false');
-		btn.dataset.id = item.id;
-
-		const title = document.createElement('span');
-		title.className = 'admin-item-title';
-		title.textContent = item.title;
-		btn.appendChild(title);
-
-		if (item.meta) {
-			const meta = document.createElement('span');
-			meta.className = 'admin-item-meta';
-			meta.textContent = item.meta;
-			btn.appendChild(meta);
-		}
-
-		btn.addEventListener('click', () => onSelect(item.id));
-		container.appendChild(btn);
-	}
-}
-
-function clearListSelection(container: HTMLElement) {
-	container.querySelectorAll('.admin-item').forEach((el) => {
-		el.classList.remove('is-selected');
-		el.setAttribute('aria-selected', 'false');
+function switchTab(root: HTMLElement, tab: string) {
+	root.querySelectorAll('[data-tab]').forEach((btn) => {
+		const active = btn.getAttribute('data-tab') === tab;
+		btn.classList.toggle('tab-active', active);
+		btn.setAttribute('aria-selected', String(active));
+	});
+	root.querySelectorAll('[data-panel]').forEach((panel) => {
+		(panel as HTMLElement).classList.toggle('hidden', panel.getAttribute('data-panel') !== tab);
 	});
 }
 
 async function initEvents(root: HTMLElement) {
-	const list = qs<HTMLElement>(root, '#events-list');
 	const select = qs<HTMLSelectElement>(root, '#events-select');
 	const form = qs<HTMLFormElement>(root, '#event-form');
 	const status = qs<HTMLElement>(root, '#events-status');
@@ -211,14 +142,9 @@ async function initEvents(root: HTMLElement) {
 		deleteBtn.disabled = !id;
 	}
 
-	function syncPicker() {
-		renderSelect(select, items, selectedId);
-		renderItemList(list, items, selectedId, selectItem);
-	}
-
 	function selectItem(id: string) {
 		fillForm(id, cache[id]);
-		syncPicker();
+		fillSelect(select, items, selectedId);
 	}
 
 	async function refresh() {
@@ -229,11 +155,11 @@ async function initEvents(root: HTMLElement) {
 			cache = {};
 			selectedId = null;
 			fillForm(null);
-			renderSelect(select, [], null);
-			renderItemList(list, [], null, selectItem, 'Could not load events.');
+			fillSelect(select, [], null);
 			setStatus(status, res.error, 'err');
 			return;
 		}
+
 		cache = Object.fromEntries(res.data.events.map((e) => [e.id, e.data]));
 		items = res.data.events.map((e) => ({
 			id: e.id,
@@ -241,49 +167,31 @@ async function initEvents(root: HTMLElement) {
 			meta: e.id,
 		}));
 
-		if (selectedId && cache[selectedId]) {
-			fillForm(selectedId, cache[selectedId]);
-		} else if (res.data.events[0]) {
-			fillForm(res.data.events[0].id, res.data.events[0].data);
-		} else {
-			fillForm(null);
-		}
-
-		syncPicker();
+		const next = selectedId && cache[selectedId] ? selectedId : res.data.events[0]?.id ?? null;
+		fillForm(next, next ? cache[next] : undefined);
+		fillSelect(select, items, selectedId);
 		setStatus(status, `${res.data.events.length} events`);
 	}
 
 	select.addEventListener('change', () => {
-		const id = select.value;
-		if (id) selectItem(id);
+		if (select.value) selectItem(select.value);
 	});
 
 	newBtn.addEventListener('click', () => {
-		clearListSelection(list);
 		select.selectedIndex = -1;
-		fillForm(null, {
-			title: '',
-			imgs: [],
-			description: '',
-			date: '',
-			featured: false,
-		});
+		fillForm(null, { title: '', imgs: [], description: '', date: '', featured: false });
 		idInput.focus();
 		setStatus(status, 'Creating a new event');
 	});
 
 	deleteBtn.addEventListener('click', async () => {
-		if (!selectedId) return;
-		if (!confirm(`Delete event “${selectedId}”?`)) return;
+		if (!selectedId || !confirm(`Delete event “${selectedId}”?`)) return;
 		setStatus(status, 'Deleting…');
 		const res = await api<{ commit?: CommitInfo }>(
 			`/api/admin/events/${encodeURIComponent(selectedId)}`,
 			{ method: 'DELETE' }
 		);
-		if (!res.ok) {
-			setStatus(status, res.error, 'err');
-			return;
-		}
+		if (!res.ok) return setStatus(status, res.error, 'err');
 		selectedId = null;
 		setStatus(status, commitNote(res.data.commit), 'ok');
 		await refresh();
@@ -292,15 +200,10 @@ async function initEvents(root: HTMLElement) {
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
 		const id = idInput.value.trim();
-		if (!id) {
-			setStatus(status, 'id is required', 'err');
-			return;
-		}
+		if (!id) return setStatus(status, 'id is required', 'err');
+
 		const imgs = parseImgs(imgsInput.value);
-		if (typeof imgs === 'string') {
-			setStatus(status, imgs, 'err');
-			return;
-		}
+		if (typeof imgs === 'string') return setStatus(status, imgs, 'err');
 
 		const data: EventData = {
 			title: titleInput.value.trim(),
@@ -309,13 +212,9 @@ async function initEvents(root: HTMLElement) {
 			featured: featuredInput.checked,
 			imgs,
 		};
-
-		const files: { filename: string; contentBase64: string }[] = [];
-		for (const file of Array.from(filesInput.files ?? [])) {
-			files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
-		}
-
+		const files = await collectUploads(filesInput);
 		const isNew = !selectedId;
+
 		setStatus(status, 'Saving…');
 		const res = isNew
 			? await api<{ commit?: CommitInfo }>('/api/admin/events', {
@@ -327,10 +226,7 @@ async function initEvents(root: HTMLElement) {
 					body: JSON.stringify({ data, files }),
 				});
 
-		if (!res.ok) {
-			setStatus(status, res.error, 'err');
-			return;
-		}
+		if (!res.ok) return setStatus(status, res.error, 'err');
 		selectedId = id;
 		setStatus(status, commitNote(res.data.commit), 'ok');
 		await refresh();
@@ -340,7 +236,6 @@ async function initEvents(root: HTMLElement) {
 }
 
 async function initExecs(root: HTMLElement) {
-	const list = qs<HTMLElement>(root, '#execs-list');
 	const select = qs<HTMLSelectElement>(root, '#execs-select');
 	const form = qs<HTMLFormElement>(root, '#exec-form');
 	const status = qs<HTMLElement>(root, '#execs-status');
@@ -373,14 +268,9 @@ async function initExecs(root: HTMLElement) {
 		deleteBtn.disabled = !id;
 	}
 
-	function syncPicker() {
-		renderSelect(select, items, selectedId);
-		renderItemList(list, items, selectedId, selectItem);
-	}
-
 	function selectItem(id: string) {
 		fillForm(id, cache[id]);
-		syncPicker();
+		fillSelect(select, items, selectedId);
 	}
 
 	async function refresh() {
@@ -391,11 +281,11 @@ async function initExecs(root: HTMLElement) {
 			cache = {};
 			selectedId = null;
 			fillForm(null);
-			renderSelect(select, [], null);
-			renderItemList(list, [], null, selectItem, 'Could not load team members.');
+			fillSelect(select, [], null);
 			setStatus(status, res.error, 'err');
 			return;
 		}
+
 		cache = Object.fromEntries(res.data.execs.map((e) => [e.id, e.data]));
 		items = res.data.execs.map((e) => ({
 			id: e.id,
@@ -403,25 +293,17 @@ async function initExecs(root: HTMLElement) {
 			meta: e.data.role,
 		}));
 
-		if (selectedId && cache[selectedId]) {
-			fillForm(selectedId, cache[selectedId]);
-		} else if (res.data.execs[0]) {
-			fillForm(res.data.execs[0].id, res.data.execs[0].data);
-		} else {
-			fillForm(null);
-		}
-
-		syncPicker();
+		const next = selectedId && cache[selectedId] ? selectedId : res.data.execs[0]?.id ?? null;
+		fillForm(next, next ? cache[next] : undefined);
+		fillSelect(select, items, selectedId);
 		setStatus(status, `${res.data.execs.length} execs`);
 	}
 
 	select.addEventListener('change', () => {
-		const id = select.value;
-		if (id) selectItem(id);
+		if (select.value) selectItem(select.value);
 	});
 
 	newBtn.addEventListener('click', () => {
-		clearListSelection(list);
 		select.selectedIndex = -1;
 		fillForm(null, {
 			role: '',
@@ -436,17 +318,13 @@ async function initExecs(root: HTMLElement) {
 	});
 
 	deleteBtn.addEventListener('click', async () => {
-		if (!selectedId) return;
-		if (!confirm(`Delete exec “${selectedId}”?`)) return;
+		if (!selectedId || !confirm(`Delete exec “${selectedId}”?`)) return;
 		setStatus(status, 'Deleting…');
 		const res = await api<{ commit?: CommitInfo }>(
 			`/api/admin/execs/${encodeURIComponent(selectedId)}`,
 			{ method: 'DELETE' }
 		);
-		if (!res.ok) {
-			setStatus(status, res.error, 'err');
-			return;
-		}
+		if (!res.ok) return setStatus(status, res.error, 'err');
 		selectedId = null;
 		setStatus(status, commitNote(res.data.commit), 'ok');
 		await refresh();
@@ -455,15 +333,10 @@ async function initExecs(root: HTMLElement) {
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
 		const id = idInput.value.trim();
-		if (!id) {
-			setStatus(status, 'id is required', 'err');
-			return;
-		}
+		if (!id) return setStatus(status, 'id is required', 'err');
+
 		const imgs = parseImgs(imgsInput.value);
-		if (typeof imgs === 'string') {
-			setStatus(status, imgs, 'err');
-			return;
-		}
+		if (typeof imgs === 'string') return setStatus(status, imgs, 'err');
 
 		const data: ExecData = {
 			role: roleInput.value.trim(),
@@ -473,13 +346,9 @@ async function initExecs(root: HTMLElement) {
 			img: imgInput.value.trim() || '/assets/execs/placeholder.jpg',
 			imgs,
 		};
-
-		const files: { filename: string; contentBase64: string }[] = [];
-		for (const file of Array.from(filesInput.files ?? [])) {
-			files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
-		}
-
+		const files = await collectUploads(filesInput);
 		const isNew = !selectedId;
+
 		setStatus(status, 'Saving…');
 		const res = isNew
 			? await api<{ commit?: CommitInfo }>('/api/admin/execs', {
@@ -491,10 +360,7 @@ async function initExecs(root: HTMLElement) {
 					body: JSON.stringify({ data, files }),
 				});
 
-		if (!res.ok) {
-			setStatus(status, res.error, 'err');
-			return;
-		}
+		if (!res.ok) return setStatus(status, res.error, 'err');
 		selectedId = id;
 		setStatus(status, commitNote(res.data.commit), 'ok');
 		await refresh();
@@ -511,88 +377,61 @@ async function initGallery(root: HTMLElement) {
 
 	async function refresh() {
 		setStatus(status, 'Loading gallery…');
-		const res = await api<{ images: GalleryImage[] }>('/api/admin/gallery');
-		if (!res.ok) {
-			setStatus(status, res.error, 'err');
-			return;
-		}
+		const res = await api<{ images: { name: string }[] }>('/api/admin/gallery');
+		if (!res.ok) return setStatus(status, res.error, 'err');
 
-		grid.innerHTML = '';
-		for (const image of res.data.images) {
-			const item = document.createElement('article');
-			item.className = 'admin-gallery-card';
-
-			const thumb = document.createElement('div');
-			thumb.className = 'admin-gallery-thumb';
-			const img = document.createElement('img');
-			img.src = `/api/admin/gallery/${encodeURIComponent(image.name)}`;
-			img.alt = image.name;
-			img.loading = 'lazy';
-			img.addEventListener('error', () => {
-				thumb.classList.add('is-missing');
-				img.replaceWith(
-					Object.assign(document.createElement('span'), { textContent: image.name })
-				);
-			});
-			thumb.appendChild(img);
-
-			const meta = document.createElement('div');
-			meta.className = 'admin-gallery-meta';
-
-			const label = document.createElement('p');
-			label.className = 'admin-gallery-name';
-			label.title = image.name;
-			label.textContent = image.name;
-
-			const delBtn = document.createElement('button');
-			delBtn.type = 'button';
-			delBtn.className = 'admin-gallery-delete';
-			delBtn.textContent = 'Delete';
-			delBtn.addEventListener('click', async () => {
-				if (!confirm(`Delete gallery image “${image.name}”?`)) return;
-				setStatus(status, 'Deleting…');
-				const del = await api<{ commit?: CommitInfo }>(
-					`/api/admin/gallery/${encodeURIComponent(image.name)}`,
-					{ method: 'DELETE' }
-				);
-				if (!del.ok) {
-					setStatus(status, del.error, 'err');
-					return;
-				}
-				setStatus(status, commitNote(del.data.commit), 'ok');
-				await refresh();
-			});
-
-			meta.append(label, delBtn);
-			item.append(thumb, meta);
-			grid.appendChild(item);
-		}
+		grid.replaceChildren(
+			...res.data.images.map((image) => {
+				const card = document.createElement('article');
+				card.className = 'admin-gallery-card';
+				card.innerHTML = `
+					<div class="admin-gallery-thumb">
+						<img src="/api/admin/gallery/${encodeURIComponent(image.name)}" alt="" loading="lazy" />
+					</div>
+					<div class="admin-gallery-meta">
+						<p class="admin-gallery-name"></p>
+						<button type="button" class="admin-gallery-delete">Delete</button>
+					</div>
+				`;
+				const nameEl = card.querySelector('.admin-gallery-name') as HTMLElement;
+				const thumb = card.querySelector('.admin-gallery-thumb') as HTMLElement;
+				const img = card.querySelector('img') as HTMLImageElement;
+				nameEl.textContent = image.name;
+				nameEl.title = image.name;
+				img.alt = image.name;
+				img.addEventListener('error', () => {
+					thumb.classList.add('is-missing');
+					img.replaceWith(Object.assign(document.createElement('span'), { textContent: image.name }));
+				});
+				card.querySelector('button')?.addEventListener('click', async () => {
+					if (!confirm(`Delete gallery image “${image.name}”?`)) return;
+					setStatus(status, 'Deleting…');
+					const del = await api<{ commit?: CommitInfo }>(
+						`/api/admin/gallery/${encodeURIComponent(image.name)}`,
+						{ method: 'DELETE' }
+					);
+					if (!del.ok) return setStatus(status, del.error, 'err');
+					setStatus(status, commitNote(del.data.commit), 'ok');
+					await refresh();
+				});
+				return card;
+			})
+		);
 
 		setStatus(status, `${res.data.images.length} images`);
 	}
 
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
-		const selected = Array.from(filesInput.files ?? []);
-		if (selected.length === 0) {
-			setStatus(status, 'Choose at least one image', 'err');
-			return;
-		}
-
-		const files = [];
-		for (const file of selected) {
-			files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
-		}
+		const files = await collectUploads(filesInput);
+		if (files.length === 0) return setStatus(status, 'Choose at least one image', 'err');
 
 		setStatus(status, 'Uploading…');
 		const res = await api<{ commit?: CommitInfo }>('/api/admin/gallery', {
 			method: 'POST',
 			body: JSON.stringify({ files }),
 		});
-		if (!res.ok) {
-			setStatus(status, res.error, 'err');
-			return;
-		}
+		if (!res.ok) return setStatus(status, res.error, 'err');
 		filesInput.value = '';
 		setStatus(status, commitNote(res.data.commit), 'ok');
 		await refresh();
