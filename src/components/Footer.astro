@@ -1,0 +1,32 @@
+---
+interface NavItem {
+	label: string;
+	href: string;
+}
+
+const links: NavItem[] = [
+	{ label: 'Home', href: '/' },
+	{ label: 'Events', href: '/events' },
+	{ label: 'Team', href: '/execs' },
+	{ label: 'Gallery', href: '/gallery' },
+	{ label: 'Contact', href: '/contact' },
+	{ label: 'Admin', href: '/admin' },
+];
+---
+
+<footer class="relative z-10 border-t border-base-200 bg-base-100">
+	<div
+		class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 py-6 text-sm"
+	>
+		{
+			links.map((link) => (
+				<a
+					href={link.href}
+					class="text-base-content/70 hover:text-primary transition-colors"
+				>
+					{link.label}
+				</a>
+			))
+		}
+	</div>
+</footer>
