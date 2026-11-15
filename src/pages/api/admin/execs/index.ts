@@ -12,6 +12,7 @@ import {
 	prettyJson,
 } from '../../../../lib/admin/content';
 import { commitFiles, getRepoTextFile, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import { listLocalExecs } from '../../../../lib/admin/local';
 
 export const GET: APIRoute = async () => {
 	try {
@@ -29,7 +30,8 @@ export const GET: APIRoute = async () => {
 		execs.sort((a, b) => a.id.localeCompare(b.id));
 		return jsonResponse({ execs });
 	} catch (err) {
-		return githubError(err);
+		console.warn('admin execs: GitHub read failed, using local files', err);
+		return jsonResponse({ execs: listLocalExecs(), source: 'local' });
 	}
 };
 

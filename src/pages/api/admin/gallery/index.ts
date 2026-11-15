@@ -11,6 +11,7 @@ import {
 	publicAssetPath,
 } from '../../../../lib/admin/content';
 import { commitFiles, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import { listLocalGallery } from '../../../../lib/admin/local';
 
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif)$/i;
 
@@ -28,7 +29,8 @@ export const GET: APIRoute = async () => {
 
 		return jsonResponse({ images });
 	} catch (err) {
-		return githubError(err);
+		console.warn('admin gallery: GitHub read failed, using local files', err);
+		return jsonResponse({ images: listLocalGallery(), source: 'local' });
 	}
 };
 

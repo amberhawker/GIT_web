@@ -12,6 +12,7 @@ import {
 	prettyJson,
 } from '../../../../lib/admin/content';
 import { commitFiles, getRepoTextFile, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import { listLocalEvents } from '../../../../lib/admin/local';
 
 export const GET: APIRoute = async () => {
 	try {
@@ -29,7 +30,9 @@ export const GET: APIRoute = async () => {
 		events.sort((a, b) => a.id.localeCompare(b.id));
 		return jsonResponse({ events });
 	} catch (err) {
-		return githubError(err);
+		// Local checkout has the JSON; use it when GitHub token/API is unavailable.
+		console.warn('admin events: GitHub read failed, using local files', err);
+		return jsonResponse({ events: listLocalEvents(), source: 'local' });
 	}
 };
 

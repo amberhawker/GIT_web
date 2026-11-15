@@ -14,6 +14,7 @@ import {
 	GitHubError,
 	listRepoDirectory,
 } from '../../../../lib/admin/github';
+import { readLocalGalleryFile } from '../../../../lib/admin/local';
 
 function contentTypeFor(name: string): string {
 	const lower = name.toLowerCase();
@@ -24,6 +25,16 @@ function contentTypeFor(name: string): string {
 	return 'application/octet-stream';
 }
 
+function imageResponse(bytes: Uint8Array, name: string): Response {
+	return new Response(bytes, {
+		status: 200,
+		headers: {
+			'Content-Type': contentTypeFor(name),
+			'Cache-Control': 'private, max-age=60',
+		},
+	});
+}
+
 /** Serve gallery image bytes for admin previews (src/assets is not publicly URL-mapped). */
 export const GET: APIRoute = async ({ params }) => {
 	const name = params.name ?? '';
@@ -31,22 +42,15 @@ export const GET: APIRoute = async ({ params }) => {
 
 	try {
 		const file = await getRepoBinaryFile(repoAssetPath('gallery', name));
-		if (!file) return errorResponse('Image not found', 404);
-
-		return new Response(file.bytes, {
-			status: 200,
-			headers: {
-				'Content-Type': contentTypeFor(name),
-				'Cache-Control': 'private, max-age=60',
-			},
-		});
+		if (file) return imageResponse(file.bytes, name);
 	} catch (err) {
-		if (err instanceof GitHubError) {
-			return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
-		}
-		console.error(err);
-		return errorResponse('Failed to load gallery image', 500);
+		console.warn('admin gallery image: GitHub read failed, trying local file', err);
 	}
+
+	const local = await readLocalGalleryFile(name);
+	if (local) return imageResponse(local, name);
+
+	return errorResponse('Image not found', 404);
 };
 
 export const DELETE: APIRoute = async ({ params }) => {
