@@ -1,0 +1,6 @@
+# Copy to .dev.vars for local wrangler/astro cloudflare secrets.
+# Never commit .dev.vars.
+
+ADMIN_PASSWORD=change-me
+SESSION_SECRET=generate-a-long-random-string
+GITHUB_TOKEN=ghp_your_fine_grained_pat_with_contents_write
