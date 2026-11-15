@@ -83,21 +83,51 @@ function formatImgs(imgs: ImgRef[] | undefined): string {
 	return (imgs ?? []).map((img) => (img.alt ? `${img.path} | ${img.alt}` : img.path)).join('\n');
 }
 
-function fillSelect(select: HTMLSelectElement, items: ListItem[], selectedId: string | null) {
-	select.innerHTML = '';
+function renderItemList(
+	container: HTMLElement,
+	items: ListItem[],
+	selectedId: string | null,
+	onSelect: (id: string) => void,
+	emptyMessage = 'Nothing here yet.'
+) {
+	container.innerHTML = '';
 	if (items.length === 0) {
-		select.innerHTML = '<option value="">No items yet</option>';
-		select.disabled = true;
+		const empty = document.createElement('p');
+		empty.className = 'admin-item-empty';
+		empty.textContent = emptyMessage;
+		container.appendChild(empty);
 		return;
 	}
-	select.disabled = false;
+
 	for (const item of items) {
-		const opt = document.createElement('option');
-		opt.value = item.id;
-		opt.textContent = item.meta ? `${item.title} - ${item.meta}` : item.title;
-		select.appendChild(opt);
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = `admin-item${item.id === selectedId ? ' is-selected' : ''}`;
+		btn.setAttribute('role', 'option');
+		btn.setAttribute('aria-selected', String(item.id === selectedId));
+
+		const title = document.createElement('span');
+		title.className = 'admin-item-title';
+		title.textContent = item.title;
+		btn.appendChild(title);
+
+		if (item.meta) {
+			const meta = document.createElement('span');
+			meta.className = 'admin-item-meta';
+			meta.textContent = item.meta;
+			btn.appendChild(meta);
+		}
+
+		btn.addEventListener('click', () => onSelect(item.id));
+		container.appendChild(btn);
 	}
-	select.value = selectedId && items.some((i) => i.id === selectedId) ? selectedId : items[0].id;
+}
+
+function clearListSelection(container: HTMLElement) {
+	container.querySelectorAll('.admin-item').forEach((el) => {
+		el.classList.remove('is-selected');
+		el.setAttribute('aria-selected', 'false');
+	});
 }
 
 function switchTab(root: HTMLElement, tab: string) {
@@ -112,7 +142,7 @@ function switchTab(root: HTMLElement, tab: string) {
 }
 
 async function initEvents(root: HTMLElement) {
-	const select = qs<HTMLSelectElement>(root, '#events-select');
+	const list = qs<HTMLElement>(root, '#events-list');
 	const form = qs<HTMLFormElement>(root, '#event-form');
 	const status = qs<HTMLElement>(root, '#events-status');
 	const idInput = qs<HTMLInputElement>(form, '[name="id"]');
@@ -144,7 +174,7 @@ async function initEvents(root: HTMLElement) {
 
 	function selectItem(id: string) {
 		fillForm(id, cache[id]);
-		fillSelect(select, items, selectedId);
+		renderItemList(list, items, selectedId, selectItem);
 	}
 
 	async function refresh() {
@@ -155,7 +185,7 @@ async function initEvents(root: HTMLElement) {
 			cache = {};
 			selectedId = null;
 			fillForm(null);
-			fillSelect(select, [], null);
+			renderItemList(list, [], null, selectItem, 'Could not load events.');
 			setStatus(status, res.error, 'err');
 			return;
 		}
@@ -169,16 +199,12 @@ async function initEvents(root: HTMLElement) {
 
 		const next = selectedId && cache[selectedId] ? selectedId : res.data.events[0]?.id ?? null;
 		fillForm(next, next ? cache[next] : undefined);
-		fillSelect(select, items, selectedId);
+		renderItemList(list, items, selectedId, selectItem);
 		setStatus(status, `${res.data.events.length} events`);
 	}
 
-	select.addEventListener('change', () => {
-		if (select.value) selectItem(select.value);
-	});
-
 	newBtn.addEventListener('click', () => {
-		select.selectedIndex = -1;
+		clearListSelection(list);
 		fillForm(null, { title: '', imgs: [], description: '', date: '', featured: false });
 		idInput.focus();
 		setStatus(status, 'Creating a new event');
@@ -236,7 +262,7 @@ async function initEvents(root: HTMLElement) {
 }
 
 async function initExecs(root: HTMLElement) {
-	const select = qs<HTMLSelectElement>(root, '#execs-select');
+	const list = qs<HTMLElement>(root, '#execs-list');
 	const form = qs<HTMLFormElement>(root, '#exec-form');
 	const status = qs<HTMLElement>(root, '#execs-status');
 	const idInput = qs<HTMLInputElement>(form, '[name="id"]');
@@ -270,7 +296,7 @@ async function initExecs(root: HTMLElement) {
 
 	function selectItem(id: string) {
 		fillForm(id, cache[id]);
-		fillSelect(select, items, selectedId);
+		renderItemList(list, items, selectedId, selectItem);
 	}
 
 	async function refresh() {
@@ -281,7 +307,7 @@ async function initExecs(root: HTMLElement) {
 			cache = {};
 			selectedId = null;
 			fillForm(null);
-			fillSelect(select, [], null);
+			renderItemList(list, [], null, selectItem, 'Could not load team members.');
 			setStatus(status, res.error, 'err');
 			return;
 		}
@@ -295,16 +321,12 @@ async function initExecs(root: HTMLElement) {
 
 		const next = selectedId && cache[selectedId] ? selectedId : res.data.execs[0]?.id ?? null;
 		fillForm(next, next ? cache[next] : undefined);
-		fillSelect(select, items, selectedId);
+		renderItemList(list, items, selectedId, selectItem);
 		setStatus(status, `${res.data.execs.length} execs`);
 	}
 
-	select.addEventListener('change', () => {
-		if (select.value) selectItem(select.value);
-	});
-
 	newBtn.addEventListener('click', () => {
-		select.selectedIndex = -1;
+		clearListSelection(list);
 		fillForm(null, {
 			role: '',
 			name: '',

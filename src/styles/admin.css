@@ -85,6 +85,10 @@
 	gap: 1rem;
 }
 
+.admin-panel.hidden {
+	display: none;
+}
+
 .admin-panel-gallery {
 	gap: 1.5rem;
 }
@@ -93,18 +97,22 @@
 	font-weight: 400;
 }
 
-.admin-toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: end;
-	gap: 0.75rem 1rem;
+.admin-split {
+	display: grid;
+	gap: 1.5rem;
+	align-items: start;
 }
 
-.admin-toolbar-select {
-	flex: 1 1 16rem;
+@media (min-width: 1024px) {
+	.admin-split {
+		grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
+	}
+}
+
+.admin-picker {
 	display: flex;
 	flex-direction: column;
-	gap: 0.4rem;
+	gap: 0.75rem;
 	min-width: 0;
 }
 
@@ -112,6 +120,67 @@
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+}
+
+.admin-item-list {
+	min-height: 12rem;
+	max-height: min(28rem, 55vh);
+	overflow-y: auto;
+	border: 2px solid var(--color-base-content);
+	background: #fff;
+	box-shadow: 3px 3px 0 var(--color-base-content);
+}
+
+.admin-item {
+	display: block;
+	width: 100%;
+	padding: 0.7rem 0.85rem;
+	border: 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 18%, transparent);
+	background: transparent;
+	color: var(--color-base-content);
+	font-family: var(--font-body);
+	font-size: 0.8rem;
+	line-height: 1.35;
+	text-align: left;
+	cursor: pointer;
+}
+
+.admin-item:last-child {
+	border-bottom: 0;
+}
+
+.admin-item:hover {
+	background: color-mix(in srgb, var(--color-base-200) 70%, white);
+}
+
+.admin-item.is-selected {
+	background: var(--color-base-content);
+	color: #fff;
+}
+
+.admin-item-title {
+	display: block;
+	font-weight: 700;
+}
+
+.admin-item-meta {
+	display: block;
+	margin-top: 0.15rem;
+	font-size: 0.7rem;
+	opacity: 0.65;
+}
+
+.admin-item.is-selected .admin-item-meta {
+	opacity: 0.8;
+}
+
+.admin-item-empty {
+	margin: 0;
+	padding: 1rem;
+	font-family: var(--font-body);
+	font-size: 0.8rem;
+	opacity: 0.55;
 }
 
 .admin-status {
@@ -188,7 +257,6 @@
 
 .admin-input,
 .admin-textarea,
-.admin-select,
 .admin-file {
 	width: 100%;
 	min-width: 0;
@@ -202,8 +270,7 @@
 	box-shadow: none;
 }
 
-.admin-input,
-.admin-select {
+.admin-input {
 	height: 2.75rem;
 	padding: 0 0.75rem;
 }
@@ -237,14 +304,8 @@
 	min-height: 6rem;
 }
 
-.admin-select {
-	appearance: auto;
-	cursor: pointer;
-}
-
 .admin-input:focus,
 .admin-textarea:focus,
-.admin-select:focus,
 .admin-file:focus {
 	outline: 2px solid var(--color-base-content);
 	outline-offset: 2px;

@@ -58,19 +58,17 @@ const authed = Astro.locals.adminAuthed;
 					</div>
 
 					<section data-panel="events" class="admin-panel">
-						<div class="admin-toolbar">
-							<label class="admin-toolbar-select">
-								<span class="admin-label">Select event</span>
-								<select id="events-select" class="admin-select"></select>
-							</label>
-							<div class="admin-toolbar-actions">
-								<button id="event-new" type="button" class="btn btn-sm btn-tactile font-mono">New</button>
-								<button id="event-delete" type="button" class="btn btn-sm btn-ghost text-error font-mono">
-									Delete
-								</button>
-							</div>
-						</div>
-						<p id="events-status" class="admin-status">Loading…</p>
+						<div class="admin-split">
+							<aside class="admin-picker">
+								<div class="admin-toolbar-actions">
+									<button id="event-new" type="button" class="btn btn-sm btn-tactile font-mono">New</button>
+									<button id="event-delete" type="button" class="btn btn-sm btn-ghost text-error font-mono">
+										Delete
+									</button>
+								</div>
+								<div id="events-list" class="admin-item-list" role="listbox" aria-label="Events"></div>
+								<p id="events-status" class="admin-status">Loading…</p>
+							</aside>
 						<form id="event-form" class="admin-form">
 							<label class="admin-field">
 								<span class="admin-label">id (filename)</span>
@@ -113,22 +111,21 @@ const authed = Astro.locals.adminAuthed;
 								</button>
 							</div>
 						</form>
+						</div>
 					</section>
 
 					<section data-panel="execs" class="admin-panel hidden">
-						<div class="admin-toolbar">
-							<label class="admin-toolbar-select">
-								<span class="admin-label">Select team member</span>
-								<select id="execs-select" class="admin-select"></select>
-							</label>
-							<div class="admin-toolbar-actions">
-								<button id="exec-new" type="button" class="btn btn-sm btn-tactile font-mono">New</button>
-								<button id="exec-delete" type="button" class="btn btn-sm btn-ghost text-error font-mono">
-									Delete
-								</button>
-							</div>
-						</div>
-						<p id="execs-status" class="admin-status">Loading…</p>
+						<div class="admin-split">
+							<aside class="admin-picker">
+								<div class="admin-toolbar-actions">
+									<button id="exec-new" type="button" class="btn btn-sm btn-tactile font-mono">New</button>
+									<button id="exec-delete" type="button" class="btn btn-sm btn-ghost text-error font-mono">
+										Delete
+									</button>
+								</div>
+								<div id="execs-list" class="admin-item-list" role="listbox" aria-label="Team members"></div>
+								<p id="execs-status" class="admin-status">Loading…</p>
+							</aside>
 						<form id="exec-form" class="admin-form">
 							<label class="admin-field">
 								<span class="admin-label">id (filename)</span>
@@ -168,6 +165,7 @@ const authed = Astro.locals.adminAuthed;
 								</button>
 							</div>
 						</form>
+						</div>
 					</section>
 
 					<section data-panel="gallery" class="admin-panel admin-panel-gallery hidden">
