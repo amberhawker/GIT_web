@@ -1,19 +1,28 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 
 const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
   '/src/assets/gallery/*.{png,jpg,jpeg,webp,gif}',
   { eager: true }
 );
 
-const images = Object.entries(imageFiles).map(([path, module]) => {
-  const filename = path.split('/').pop() || 'photo.jpg';
-  return {
-    data: module.default,
-    filename,
-  };
-});
+const images = await Promise.all(
+  Object.entries(imageFiles).map(async ([path, module]) => {
+    const filename = path.split('/').pop() || 'photo.jpg';
+    const modalImage = await getImage({
+      src: module.default,
+      width: 1600,
+      // Keep gif so animated gallery assets stay animated in the lightbox
+      format: module.default.format === 'gif' ? 'gif' : 'webp',
+    });
+    return {
+      data: module.default,
+      modalSrc: modalImage.src,
+      filename,
+    };
+  })
+);
 
 const tilts = [
   'card-tilt-1',
@@ -53,7 +62,7 @@ const tilts = [
               "gallery-card group relative p-3 pb-3.5 bg-white rounded-xs border-2 border-base-content shadow-[4px_4px_0px_#3d0824] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary z-10 hover:z-30",
               tilt
             ]}
-            data-img-src={img.data.src}
+            data-img-src={img.modalSrc}
             data-img-name={img.filename}
             data-img-dims={`${img.data.width} × ${img.data.height} px`}
             tabindex="0"
@@ -120,7 +129,7 @@ const tilts = [
           data-title="Windows Picture and Fax Viewer"
         >
           <div class="p-4 sm:p-6 bg-base-100 flex flex-col items-center">
-            <!-- Image Canvas -->
+            <!-- Native img: src is swapped client-side; URL comes from getImage() above -->
             <div class="w-full max-h-[65vh] flex items-center justify-center overflow-hidden rounded bg-base-200/50 border border-base-content/20 p-2 sm:p-4">
               <img
                 id="modal_image"

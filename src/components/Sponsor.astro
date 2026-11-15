@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { resolveAssetImage } from '../lib/images';
 
 interface Props {
     name: string,
@@ -16,16 +17,18 @@ const {
     address = "",
     contact = ""
 } = Astro.props;
+
+const resolvedImg = resolveAssetImage(img);
 ---
 
 <div class="event-card mockup-browser bg-base-100 border border-base-300 w-25% mx-[7vh] mt-[2vh]">
     <div class="flex flex-col max-w-20% md:flex-row items-left justify-left gap-6 p-6 md:p-8">
         <div class="relative w-full md:w-[60vh] max-w-[60vh] aspect-3/2 shrink-0">
-            <Image 
-                alt={name},
-                src={img}
-                width={600}
-                height={400}
+            <Image
+                alt={name}
+                src={resolvedImg}
+                widths={[400, 800, 1200]}
+                sizes="(max-width: 768px) 100vw, 60vh"
                 class="object-cover w-full h-full"
             />
         </div>

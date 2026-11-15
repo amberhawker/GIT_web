@@ -1,6 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
+import facebookIcon from '../assets/icons/facebook.png';
+import instagramIcon from '../assets/icons/instagram.png';
+import linkedinIcon from '../assets/icons/linkedin.png';
+
+const socialIcons: Record<string, ImageMetadata> = {
+	facebook: facebookIcon,
+	instagram: instagramIcon,
+	linkedin: linkedinIcon,
+};
 
 const allLinks = await getCollection("links");
 
@@ -255,6 +265,7 @@ const getSocialMeta = (id: string) => {
                 <div class="flex flex-col gap-4">
                     {icos.map((link) => {
                         const social = getSocialMeta(link.data.id);
+                        const icon = socialIcons[link.data.ico.src];
                         return (
                             <div class="social-card group relative p-5 bg-base-100 rounded-xl border-2 border-base-content shadow-[4px_4px_0px_#3d0824] transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#3d0824]">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -264,11 +275,15 @@ const getSocialMeta = (id: string) => {
                                             class="w-12 h-12 rounded-lg p-2.5 border-2 border-base-content flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#3d0824] transition-transform duration-200 group-hover:scale-105"
                                             style={`background-color: #${link.data.ico.bg.replace(/^#/, '')};`}
                                         >
-                                            <img
-                                                src={"/assets/icons/" + link.data.ico.src + ".png"}
-                                                alt={link.data.id + " icon"}
-                                                class="w-full h-full object-contain drop-shadow-xs"
-                                            />
+                                            {icon && (
+                                                <Image
+                                                    src={icon}
+                                                    alt={link.data.id + " icon"}
+                                                    width={48}
+                                                    height={48}
+                                                    class="w-full h-full object-contain drop-shadow-xs"
+                                                />
+                                            )}
                                         </div>
 
                                         <!-- Content Info -->
