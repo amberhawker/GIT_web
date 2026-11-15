@@ -15,7 +15,7 @@ const authed = Astro.locals.adminAuthed;
 				</p>
 				<h1 class="font-header text-4xl sm:text-5xl font-bold tracking-tight">Admin</h1>
 				<p class="text-sm text-base-content/65 mt-2 max-w-md">
-					Edit events, team, and gallery. Saves commit straight to GitHub.
+					Edit events, team, and gallery. Pushed to Github on save.
 				</p>
 			</div>
 			{
@@ -244,10 +244,10 @@ const authed = Astro.locals.adminAuthed;
 						</div>
 					</section>
 
-					<section data-panel="gallery" class="hidden space-y-4">
+					<section data-panel="gallery" class="hidden space-y-6">
 						<p id="gallery-status" class="text-xs font-mono text-base-content/60"></p>
-						<form id="gallery-form" class="admin-form admin-form-single">
-							<label class="admin-field admin-field-full">
+						<form id="gallery-form" class="admin-form admin-form-upload">
+							<label class="admin-field admin-upload-field">
 								<span class="admin-label">upload images</span>
 								<input
 									name="files"
@@ -257,13 +257,13 @@ const authed = Astro.locals.adminAuthed;
 									class="admin-file"
 								/>
 							</label>
-							<div class="admin-field-full">
+							<div class="admin-upload-actions">
 								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 									Upload
 								</button>
 							</div>
 						</form>
-						<div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+						<div id="gallery-grid" class="admin-gallery-grid"></div>
 					</section>
 				</div>
 			)
@@ -288,15 +288,115 @@ const authed = Astro.locals.adminAuthed;
 		box-shadow: 3px 3px 0 var(--color-base-content);
 	}
 
-	.admin-form-single {
+	.admin-form-upload {
 		grid-template-columns: 1fr;
+		align-items: end;
 	}
 
 	@media (min-width: 768px) {
-		.admin-form:not(.admin-form-single) {
+		.admin-form:not(.admin-form-upload) {
 			grid-template-columns: 1fr 1fr;
 			padding: 1.5rem;
 		}
+
+		.admin-form-upload {
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 1rem 1.25rem;
+			padding: 1.25rem 1.5rem;
+		}
+	}
+
+	.admin-upload-field {
+		min-width: 0;
+	}
+
+	.admin-upload-actions {
+		display: flex;
+		align-items: end;
+		padding-bottom: 0.05rem;
+	}
+
+	.admin-gallery-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+		gap: 1.25rem;
+	}
+
+	@media (min-width: 640px) {
+		.admin-gallery-grid {
+			gap: 1.5rem;
+		}
+	}
+
+	:global(.admin-gallery-card) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		border: 2px solid var(--color-base-content);
+		background: #fff;
+		box-shadow: 3px 3px 0 var(--color-base-content);
+		min-width: 0;
+	}
+
+	:global(.admin-gallery-thumb) {
+		aspect-ratio: 1;
+		overflow: hidden;
+		background: var(--color-base-200);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid color-mix(in srgb, var(--color-base-content) 20%, transparent);
+	}
+
+	:global(.admin-gallery-thumb img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	:global(.admin-gallery-thumb.is-missing) {
+		padding: 0.75rem;
+		font-family: var(--font-body);
+		font-size: 0.7rem;
+		color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
+		text-align: center;
+		word-break: break-all;
+	}
+
+	:global(.admin-gallery-meta) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+
+	:global(.admin-gallery-name) {
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: 0.75rem;
+		line-height: 1.3;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	:global(.admin-gallery-delete) {
+		align-self: flex-start;
+		border: 0;
+		background: transparent;
+		padding: 0;
+		font-family: var(--font-body);
+		font-size: 0.75rem;
+		color: #b42318;
+		cursor: pointer;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	:global(.admin-gallery-delete:hover) {
+		color: #7a1510;
 	}
 
 	.admin-field {

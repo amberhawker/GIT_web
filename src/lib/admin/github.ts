@@ -124,6 +124,14 @@ export async function githubFetch<T = GhJson>(
 	return gh<T>(path, GITHUB_TOKEN, init);
 }
 
+function decodeBase64Bytes(raw: string): Uint8Array {
+	const cleaned = raw.replace(/\n/g, '');
+	const binary = atob(cleaned);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+	return bytes;
+}
+
 /** Read a text file from the repo (decodes base64 content). */
 export async function getRepoTextFile(path: string): Promise<{
 	sha: string;
@@ -141,11 +149,34 @@ export async function getRepoTextFile(path: string): Promise<{
 		const raw = file.content.replace(/\n/g, '');
 		const content =
 			file.encoding === 'base64'
-				? new TextDecoder().decode(
-						Uint8Array.from(atob(raw), (c) => c.charCodeAt(0))
-					)
+				? new TextDecoder().decode(decodeBase64Bytes(raw))
 				: file.content;
 		return { sha: file.sha, content };
+	} catch (err) {
+		if (err instanceof GitHubError && err.status === 404) return null;
+		throw err;
+	}
+}
+
+/** Read a binary file from the repo (e.g. images for admin previews). */
+export async function getRepoBinaryFile(path: string): Promise<{
+	sha: string;
+	bytes: Uint8Array;
+} | null> {
+	const { GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH } = getAdminEnv();
+	const { owner, name } = repoParts(GITHUB_REPO);
+
+	try {
+		const file = await gh<ContentFile>(
+			`/repos/${owner}/${name}/contents/${encodeRepoPath(path)}?ref=${encodeURIComponent(GITHUB_BRANCH)}`,
+			GITHUB_TOKEN
+		);
+		if (file.type !== 'file' || !file.content) return null;
+		const bytes =
+			file.encoding === 'base64'
+				? decodeBase64Bytes(file.content)
+				: new TextEncoder().encode(file.content);
+		return { sha: file.sha, bytes };
 	} catch (err) {
 		if (err instanceof GitHubError && err.status === 404) return null;
 		throw err;

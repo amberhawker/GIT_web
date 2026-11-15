@@ -125,7 +125,7 @@ function renderSelect(select: HTMLSelectElement, items: ListItem[], selectedId: 
 	for (const item of items) {
 		const opt = document.createElement('option');
 		opt.value = item.id;
-		opt.textContent = item.meta ? `${item.title} — ${item.meta}` : item.title;
+		opt.textContent = item.meta ? `${item.title} - ${item.meta}` : item.title;
 		select.appendChild(opt);
 	}
 	select.value = selectedId && items.some((i) => i.id === selectedId) ? selectedId : items[0].id;
@@ -519,31 +519,34 @@ async function initGallery(root: HTMLElement) {
 
 		grid.innerHTML = '';
 		for (const image of res.data.images) {
-			const item = document.createElement('div');
-			item.className =
-				'border-2 border-base-content bg-white p-2 space-y-2 shadow-[3px_3px_0_#3d0824]';
+			const item = document.createElement('article');
+			item.className = 'admin-gallery-card';
 
 			const thumb = document.createElement('div');
-			thumb.className =
-				'aspect-square overflow-hidden bg-base-200 flex items-center justify-center text-xs text-base-content/50 font-mono';
+			thumb.className = 'admin-gallery-thumb';
 			const img = document.createElement('img');
-			img.src = image.path;
+			img.src = `/api/admin/gallery/${encodeURIComponent(image.name)}`;
 			img.alt = image.name;
 			img.loading = 'lazy';
-			img.className = 'h-full w-full object-cover';
 			img.addEventListener('error', () => {
-				img.replaceWith(Object.assign(document.createElement('span'), { textContent: image.name }));
+				thumb.classList.add('is-missing');
+				img.replaceWith(
+					Object.assign(document.createElement('span'), { textContent: image.name })
+				);
 			});
 			thumb.appendChild(img);
 
+			const meta = document.createElement('div');
+			meta.className = 'admin-gallery-meta';
+
 			const label = document.createElement('p');
-			label.className = 'text-xs truncate font-mono';
+			label.className = 'admin-gallery-name';
 			label.title = image.name;
 			label.textContent = image.name;
 
 			const delBtn = document.createElement('button');
 			delBtn.type = 'button';
-			delBtn.className = 'btn btn-ghost btn-xs text-error font-mono';
+			delBtn.className = 'admin-gallery-delete';
 			delBtn.textContent = 'Delete';
 			delBtn.addEventListener('click', async () => {
 				if (!confirm(`Delete gallery image “${image.name}”?`)) return;
@@ -560,7 +563,8 @@ async function initGallery(root: HTMLElement) {
 				await refresh();
 			});
 
-			item.append(thumb, label, delBtn);
+			meta.append(label, delBtn);
+			item.append(thumb, meta);
 			grid.appendChild(item);
 		}
 

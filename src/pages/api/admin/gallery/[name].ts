@@ -8,7 +8,46 @@ import {
 	jsonResponse,
 	repoAssetPath,
 } from '../../../../lib/admin/content';
-import { commitFiles, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import {
+	commitFiles,
+	getRepoBinaryFile,
+	GitHubError,
+	listRepoDirectory,
+} from '../../../../lib/admin/github';
+
+function contentTypeFor(name: string): string {
+	const lower = name.toLowerCase();
+	if (lower.endsWith('.png')) return 'image/png';
+	if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+	if (lower.endsWith('.webp')) return 'image/webp';
+	if (lower.endsWith('.gif')) return 'image/gif';
+	return 'application/octet-stream';
+}
+
+/** Serve gallery image bytes for admin previews (src/assets is not publicly URL-mapped). */
+export const GET: APIRoute = async ({ params }) => {
+	const name = params.name ?? '';
+	if (!isValidImageFilename(name)) return errorResponse('Invalid image name');
+
+	try {
+		const file = await getRepoBinaryFile(repoAssetPath('gallery', name));
+		if (!file) return errorResponse('Image not found', 404);
+
+		return new Response(file.bytes, {
+			status: 200,
+			headers: {
+				'Content-Type': contentTypeFor(name),
+				'Cache-Control': 'private, max-age=60',
+			},
+		});
+	} catch (err) {
+		if (err instanceof GitHubError) {
+			return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
+		}
+		console.error(err);
+		return errorResponse('Failed to load gallery image', 500);
+	}
+};
 
 export const DELETE: APIRoute = async ({ params }) => {
 	const name = params.name ?? '';
