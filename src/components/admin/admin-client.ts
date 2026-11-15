@@ -21,6 +21,8 @@ type GalleryImage = { name: string; path: string };
 
 type CommitInfo = { sha?: string; htmlUrl?: string; message?: string };
 
+type ListItem = { id: string; title: string; meta?: string };
+
 async function api<T>(
 	path: string,
 	init?: RequestInit
@@ -75,7 +77,10 @@ function qs<T extends HTMLElement>(root: ParentNode, selector: string): T {
 
 function switchTab(root: HTMLElement, tab: string) {
 	root.querySelectorAll('[data-tab]').forEach((btn) => {
-		btn.classList.toggle('tab-active', btn.getAttribute('data-tab') === tab);
+		const active = btn.getAttribute('data-tab') === tab;
+		btn.classList.toggle('tab-active', active);
+		btn.setAttribute('aria-selected', active ? 'true' : 'false');
+		btn.classList.toggle('text-base-content/50', !active);
 	});
 	root.querySelectorAll('[data-panel]').forEach((panel) => {
 		const match = panel.getAttribute('data-panel') === tab;
@@ -104,8 +109,79 @@ function formatImgs(imgs: ImgRef[] | undefined): string {
 	return (imgs ?? []).map((img) => (img.alt ? `${img.path} | ${img.alt}` : img.path)).join('\n');
 }
 
+function renderSelect(select: HTMLSelectElement, items: ListItem[], selectedId: string | null) {
+	select.innerHTML = '';
+
+	if (items.length === 0) {
+		const opt = document.createElement('option');
+		opt.value = '';
+		opt.textContent = 'No items yet';
+		select.appendChild(opt);
+		select.disabled = true;
+		return;
+	}
+
+	select.disabled = false;
+	for (const item of items) {
+		const opt = document.createElement('option');
+		opt.value = item.id;
+		opt.textContent = item.meta ? `${item.title} — ${item.meta}` : item.title;
+		select.appendChild(opt);
+	}
+	select.value = selectedId && items.some((i) => i.id === selectedId) ? selectedId : items[0].id;
+}
+
+function renderItemList(
+	container: HTMLElement,
+	items: ListItem[],
+	selectedId: string | null,
+	onSelect: (id: string) => void,
+	emptyMessage = 'Nothing here yet.'
+) {
+	container.innerHTML = '';
+	if (items.length === 0) {
+		const empty = document.createElement('p');
+		empty.className = 'admin-item-empty';
+		empty.textContent = emptyMessage;
+		container.appendChild(empty);
+		return;
+	}
+
+	for (const item of items) {
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = `admin-item${item.id === selectedId ? ' is-selected' : ''}`;
+		btn.setAttribute('role', 'option');
+		btn.setAttribute('aria-selected', item.id === selectedId ? 'true' : 'false');
+		btn.dataset.id = item.id;
+
+		const title = document.createElement('span');
+		title.className = 'admin-item-title';
+		title.textContent = item.title;
+		btn.appendChild(title);
+
+		if (item.meta) {
+			const meta = document.createElement('span');
+			meta.className = 'admin-item-meta';
+			meta.textContent = item.meta;
+			btn.appendChild(meta);
+		}
+
+		btn.addEventListener('click', () => onSelect(item.id));
+		container.appendChild(btn);
+	}
+}
+
+function clearListSelection(container: HTMLElement) {
+	container.querySelectorAll('.admin-item').forEach((el) => {
+		el.classList.remove('is-selected');
+		el.setAttribute('aria-selected', 'false');
+	});
+}
+
 async function initEvents(root: HTMLElement) {
-	const list = qs<HTMLSelectElement>(root, '#events-list');
+	const list = qs<HTMLElement>(root, '#events-list');
+	const select = qs<HTMLSelectElement>(root, '#events-select');
 	const form = qs<HTMLFormElement>(root, '#event-form');
 	const status = qs<HTMLElement>(root, '#events-status');
 	const idInput = qs<HTMLInputElement>(form, '[name="id"]');
@@ -120,6 +196,7 @@ async function initEvents(root: HTMLElement) {
 
 	let selectedId: string | null = null;
 	let cache: Record<string, EventData> = {};
+	let items: ListItem[] = [];
 
 	function fillForm(id: string | null, data?: EventData) {
 		selectedId = id;
@@ -134,40 +211,56 @@ async function initEvents(root: HTMLElement) {
 		deleteBtn.disabled = !id;
 	}
 
+	function syncPicker() {
+		renderSelect(select, items, selectedId);
+		renderItemList(list, items, selectedId, selectItem);
+	}
+
+	function selectItem(id: string) {
+		fillForm(id, cache[id]);
+		syncPicker();
+	}
+
 	async function refresh() {
 		setStatus(status, 'Loading events…');
 		const res = await api<{ events: { id: string; data: EventData }[] }>('/api/admin/events');
 		if (!res.ok) {
+			items = [];
+			cache = {};
+			selectedId = null;
+			fillForm(null);
+			renderSelect(select, [], null);
+			renderItemList(list, [], null, selectItem, 'Could not load events.');
 			setStatus(status, res.error, 'err');
 			return;
 		}
 		cache = Object.fromEntries(res.data.events.map((e) => [e.id, e.data]));
-		list.innerHTML = '';
-		for (const event of res.data.events) {
-			const opt = document.createElement('option');
-			opt.value = event.id;
-			opt.textContent = `${event.data.title} (${event.id})`;
-			list.appendChild(opt);
-		}
+		items = res.data.events.map((e) => ({
+			id: e.id,
+			title: e.data.title || e.id,
+			meta: e.id,
+		}));
+
 		if (selectedId && cache[selectedId]) {
-			list.value = selectedId;
 			fillForm(selectedId, cache[selectedId]);
 		} else if (res.data.events[0]) {
-			list.value = res.data.events[0].id;
 			fillForm(res.data.events[0].id, res.data.events[0].data);
 		} else {
 			fillForm(null);
 		}
+
+		syncPicker();
 		setStatus(status, `${res.data.events.length} events`);
 	}
 
-	list.addEventListener('change', () => {
-		const id = list.value;
-		fillForm(id, cache[id]);
+	select.addEventListener('change', () => {
+		const id = select.value;
+		if (id) selectItem(id);
 	});
 
 	newBtn.addEventListener('click', () => {
-		list.selectedIndex = -1;
+		clearListSelection(list);
+		select.selectedIndex = -1;
 		fillForm(null, {
 			title: '',
 			imgs: [],
@@ -247,7 +340,8 @@ async function initEvents(root: HTMLElement) {
 }
 
 async function initExecs(root: HTMLElement) {
-	const list = qs<HTMLSelectElement>(root, '#execs-list');
+	const list = qs<HTMLElement>(root, '#execs-list');
+	const select = qs<HTMLSelectElement>(root, '#execs-select');
 	const form = qs<HTMLFormElement>(root, '#exec-form');
 	const status = qs<HTMLElement>(root, '#execs-status');
 	const idInput = qs<HTMLInputElement>(form, '[name="id"]');
@@ -263,6 +357,7 @@ async function initExecs(root: HTMLElement) {
 
 	let selectedId: string | null = null;
 	let cache: Record<string, ExecData> = {};
+	let items: ListItem[] = [];
 
 	function fillForm(id: string | null, data?: ExecData) {
 		selectedId = id;
@@ -278,40 +373,56 @@ async function initExecs(root: HTMLElement) {
 		deleteBtn.disabled = !id;
 	}
 
+	function syncPicker() {
+		renderSelect(select, items, selectedId);
+		renderItemList(list, items, selectedId, selectItem);
+	}
+
+	function selectItem(id: string) {
+		fillForm(id, cache[id]);
+		syncPicker();
+	}
+
 	async function refresh() {
 		setStatus(status, 'Loading execs…');
 		const res = await api<{ execs: { id: string; data: ExecData }[] }>('/api/admin/execs');
 		if (!res.ok) {
+			items = [];
+			cache = {};
+			selectedId = null;
+			fillForm(null);
+			renderSelect(select, [], null);
+			renderItemList(list, [], null, selectItem, 'Could not load team members.');
 			setStatus(status, res.error, 'err');
 			return;
 		}
 		cache = Object.fromEntries(res.data.execs.map((e) => [e.id, e.data]));
-		list.innerHTML = '';
-		for (const exec of res.data.execs) {
-			const opt = document.createElement('option');
-			opt.value = exec.id;
-			opt.textContent = `${exec.data.name} — ${exec.data.role}`;
-			list.appendChild(opt);
-		}
+		items = res.data.execs.map((e) => ({
+			id: e.id,
+			title: e.data.name || e.id,
+			meta: e.data.role,
+		}));
+
 		if (selectedId && cache[selectedId]) {
-			list.value = selectedId;
 			fillForm(selectedId, cache[selectedId]);
 		} else if (res.data.execs[0]) {
-			list.value = res.data.execs[0].id;
 			fillForm(res.data.execs[0].id, res.data.execs[0].data);
 		} else {
 			fillForm(null);
 		}
+
+		syncPicker();
 		setStatus(status, `${res.data.execs.length} execs`);
 	}
 
-	list.addEventListener('change', () => {
-		const id = list.value;
-		fillForm(id, cache[id]);
+	select.addEventListener('change', () => {
+		const id = select.value;
+		if (id) selectItem(id);
 	});
 
 	newBtn.addEventListener('click', () => {
-		list.selectedIndex = -1;
+		clearListSelection(list);
+		select.selectedIndex = -1;
 		fillForm(null, {
 			role: '',
 			name: '',
@@ -409,24 +520,36 @@ async function initGallery(root: HTMLElement) {
 		grid.innerHTML = '';
 		for (const image of res.data.images) {
 			const item = document.createElement('div');
-			item.className = 'border border-base-200 rounded-lg p-2 space-y-2';
-			item.innerHTML = `
-				<div class="aspect-square overflow-hidden rounded bg-base-200 flex items-center justify-center text-xs text-base-content/50">
-					<span>${image.name}</span>
-				</div>
-				<p class="text-xs truncate" title="${image.name}">${image.name}</p>
-				<button type="button" class="btn btn-ghost btn-xs text-error" data-delete="${image.name}">Delete</button>
-			`;
-			grid.appendChild(item);
-		}
+			item.className =
+				'border-2 border-base-content bg-white p-2 space-y-2 shadow-[3px_3px_0_#3d0824]';
 
-		grid.querySelectorAll<HTMLButtonElement>('[data-delete]').forEach((btn) => {
-			btn.addEventListener('click', async () => {
-				const name = btn.dataset.delete;
-				if (!name || !confirm(`Delete gallery image “${name}”?`)) return;
+			const thumb = document.createElement('div');
+			thumb.className =
+				'aspect-square overflow-hidden bg-base-200 flex items-center justify-center text-xs text-base-content/50 font-mono';
+			const img = document.createElement('img');
+			img.src = image.path;
+			img.alt = image.name;
+			img.loading = 'lazy';
+			img.className = 'h-full w-full object-cover';
+			img.addEventListener('error', () => {
+				img.replaceWith(Object.assign(document.createElement('span'), { textContent: image.name }));
+			});
+			thumb.appendChild(img);
+
+			const label = document.createElement('p');
+			label.className = 'text-xs truncate font-mono';
+			label.title = image.name;
+			label.textContent = image.name;
+
+			const delBtn = document.createElement('button');
+			delBtn.type = 'button';
+			delBtn.className = 'btn btn-ghost btn-xs text-error font-mono';
+			delBtn.textContent = 'Delete';
+			delBtn.addEventListener('click', async () => {
+				if (!confirm(`Delete gallery image “${image.name}”?`)) return;
 				setStatus(status, 'Deleting…');
 				const del = await api<{ commit?: CommitInfo }>(
-					`/api/admin/gallery/${encodeURIComponent(name)}`,
+					`/api/admin/gallery/${encodeURIComponent(image.name)}`,
 					{ method: 'DELETE' }
 				);
 				if (!del.ok) {
@@ -436,7 +559,10 @@ async function initGallery(root: HTMLElement) {
 				setStatus(status, commitNote(del.data.commit), 'ok');
 				await refresh();
 			});
-		});
+
+			item.append(thumb, label, delBtn);
+			grid.appendChild(item);
+		}
 
 		setStatus(status, `${res.data.images.length} images`);
 	}
