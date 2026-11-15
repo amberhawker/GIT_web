@@ -1,0 +1,78 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+
+const authed = Astro.locals.adminAuthed;
+---
+
+<Layout>
+	<main class="mx-auto max-w-md px-4 py-16">
+		<h1 class="font-header text-3xl font-bold mb-2">Admin</h1>
+		{
+			authed ? (
+				<div class="space-y-4">
+					<p class="text-base-content/70">You are signed in.</p>
+					<button id="logout-btn" class="btn btn-outline btn-sm" type="button">
+						Log out
+					</button>
+				</div>
+			) : (
+				<form id="login-form" class="space-y-4">
+					<p class="text-base-content/70 text-sm">Enter the shared site password.</p>
+					<label class="form-control w-full">
+						<span class="label-text mb-1">Password</span>
+						<input
+							type="password"
+							name="password"
+							required
+							autocomplete="current-password"
+							class="input input-bordered w-full"
+						/>
+					</label>
+					<p id="login-error" class="text-error text-sm hidden"></p>
+					<button class="btn btn-primary" type="submit">Log in</button>
+				</form>
+			)
+		}
+	</main>
+</Layout>
+
+<script>
+	const form = document.getElementById('login-form') as HTMLFormElement | null;
+	const errorEl = document.getElementById('login-error');
+	const logoutBtn = document.getElementById('logout-btn');
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		if (errorEl) {
+			errorEl.classList.add('hidden');
+			errorEl.textContent = '';
+		}
+
+		const data = new FormData(form);
+		const password = String(data.get('password') ?? '');
+
+		const res = await fetch('/api/admin/login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ password }),
+		});
+
+		if (!res.ok) {
+			const body = (await res.json().catch(() => ({}))) as { error?: string };
+			if (errorEl) {
+				errorEl.textContent = body.error ?? 'Login failed';
+				errorEl.classList.remove('hidden');
+			}
+			return;
+		}
+
+		window.location.reload();
+	});
+
+	logoutBtn?.addEventListener('click', async () => {
+		await fetch('/api/admin/logout', { method: 'POST' });
+		window.location.reload();
+	});
+</script>
