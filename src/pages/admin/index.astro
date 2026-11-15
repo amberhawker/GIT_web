@@ -7,18 +7,26 @@ const authed = Astro.locals.adminAuthed;
 ---
 
 <Layout>
-	<main class="mx-auto max-w-md px-4 py-16">
-		<h1 class="font-header text-3xl font-bold mb-2">Admin</h1>
-		{
-			authed ? (
-				<div class="space-y-4">
-					<p class="text-base-content/70">You are signed in.</p>
+	<main class="mx-auto max-w-5xl px-4 py-10">
+		<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+			<div>
+				<h1 class="font-header text-3xl font-bold">Admin</h1>
+				<p class="text-sm text-base-content/60 mt-1">
+					Edit events, team, and gallery. Saves commit to GitHub.
+				</p>
+			</div>
+			{
+				authed && (
 					<button id="logout-btn" class="btn btn-outline btn-sm" type="button">
 						Log out
 					</button>
-				</div>
-			) : (
-				<form id="login-form" class="space-y-4">
+				)
+			}
+		</div>
+
+		{
+			!authed ? (
+				<form id="login-form" class="mx-auto max-w-md space-y-4">
 					<p class="text-base-content/70 text-sm">Enter the shared site password.</p>
 					<label class="form-control w-full">
 						<span class="label-text mb-1">Password</span>
@@ -31,8 +39,170 @@ const authed = Astro.locals.adminAuthed;
 						/>
 					</label>
 					<p id="login-error" class="text-error text-sm hidden"></p>
-					<button class="btn btn-primary" type="submit">Log in</button>
+					<button class="btn btn-primary" type="submit">
+						Log in
+					</button>
 				</form>
+			) : (
+				<div id="admin-dashboard" class="space-y-6">
+					<div role="tablist" class="tabs tabs-bordered">
+						<button type="button" role="tab" class="tab tab-active" data-tab="events">
+							Events
+						</button>
+						<button type="button" role="tab" class="tab" data-tab="execs">
+							Team
+						</button>
+						<button type="button" role="tab" class="tab" data-tab="gallery">
+							Gallery
+						</button>
+					</div>
+
+					<section data-panel="events" class="space-y-4">
+						<div class="flex flex-wrap items-center gap-2">
+							<select id="events-list" class="select select-bordered min-w-64" size="8"></select>
+							<div class="flex flex-col gap-2">
+								<button id="event-new" type="button" class="btn btn-sm">
+									New
+								</button>
+								<button id="event-delete" type="button" class="btn btn-sm btn-ghost text-error">
+									Delete
+								</button>
+							</div>
+						</div>
+						<p id="events-status" class="text-sm text-base-content/60"></p>
+						<form id="event-form" class="grid gap-3 md:grid-cols-2">
+							<label class="form-control">
+								<span class="label-text mb-1">id (filename)</span>
+								<input name="id" class="input input-bordered" required placeholder="hackattack" />
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1">title</span>
+								<input name="title" class="input input-bordered" required />
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1">date</span>
+								<input name="date" class="input input-bordered" />
+							</label>
+							<label class="form-control flex-row items-center gap-2 pt-7">
+								<input name="featured" type="checkbox" class="checkbox" />
+								<span class="label-text">featured</span>
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">description</span>
+								<textarea name="description" class="textarea textarea-bordered min-h-24"></textarea>
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">images (one per line: path | alt)</span>
+								<textarea
+									name="imgs"
+									class="textarea textarea-bordered min-h-24 font-mono text-sm"
+									placeholder="/assets/events/hackattack.png | Hack Attack"
+								></textarea>
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">upload images (optional)</span>
+								<input
+									name="files"
+									type="file"
+									accept="image/*"
+									multiple
+									class="file-input file-input-bordered w-full"
+								/>
+							</label>
+							<div class="md:col-span-2">
+								<button class="btn btn-primary" type="submit">
+									Save event
+								</button>
+							</div>
+						</form>
+					</section>
+
+					<section data-panel="execs" class="hidden space-y-4">
+						<div class="flex flex-wrap items-center gap-2">
+							<select id="execs-list" class="select select-bordered min-w-64" size="8"></select>
+							<div class="flex flex-col gap-2">
+								<button id="exec-new" type="button" class="btn btn-sm">
+									New
+								</button>
+								<button id="exec-delete" type="button" class="btn btn-sm btn-ghost text-error">
+									Delete
+								</button>
+							</div>
+						</div>
+						<p id="execs-status" class="text-sm text-base-content/60"></p>
+						<form id="exec-form" class="grid gap-3 md:grid-cols-2">
+							<label class="form-control">
+								<span class="label-text mb-1">id (filename)</span>
+								<input name="id" class="input input-bordered" required placeholder="president" />
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1">role</span>
+								<input name="role" class="input input-bordered" required />
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1">name</span>
+								<input name="name" class="input input-bordered" required />
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1">degree</span>
+								<input name="degree" class="input input-bordered" required />
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">description</span>
+								<textarea name="description" class="textarea textarea-bordered min-h-20" required
+								></textarea>
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">primary img path</span>
+								<input
+									name="img"
+									class="input input-bordered font-mono text-sm"
+									placeholder="/assets/execs/name.jpg"
+								/>
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">imgs stack (one per line: path | alt)</span>
+								<textarea name="imgs" class="textarea textarea-bordered min-h-24 font-mono text-sm"
+								></textarea>
+							</label>
+							<label class="form-control md:col-span-2">
+								<span class="label-text mb-1">upload images (optional)</span>
+								<input
+									name="files"
+									type="file"
+									accept="image/*"
+									multiple
+									class="file-input file-input-bordered w-full"
+								/>
+							</label>
+							<div class="md:col-span-2">
+								<button class="btn btn-primary" type="submit">
+									Save exec
+								</button>
+							</div>
+						</form>
+					</section>
+
+					<section data-panel="gallery" class="hidden space-y-4">
+						<p id="gallery-status" class="text-sm text-base-content/60"></p>
+						<form id="gallery-form" class="flex flex-wrap items-end gap-3">
+							<label class="form-control grow">
+								<span class="label-text mb-1">upload images</span>
+								<input
+									name="files"
+									type="file"
+									accept="image/*"
+									multiple
+									class="file-input file-input-bordered w-full"
+								/>
+							</label>
+							<button class="btn btn-primary" type="submit">
+								Upload
+							</button>
+						</form>
+						<div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+					</section>
+				</div>
 			)
 		}
 	</main>
@@ -75,4 +245,11 @@ const authed = Astro.locals.adminAuthed;
 		await fetch('/api/admin/logout', { method: 'POST' });
 		window.location.reload();
 	});
+</script>
+
+<script>
+	import { initAdminDashboard } from '../../components/admin/admin-client';
+
+	const root = document.getElementById('admin-dashboard');
+	if (root) initAdminDashboard(root);
 </script>
