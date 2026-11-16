@@ -9,6 +9,8 @@ const events = defineCollection({
     }),
     schema: z.object({
         title: z.string(),
+        date: z.string().optional(),
+        location: z.string().optional(),
         imgs: z.array(
             z.object({
                 path: z.string(),
@@ -16,7 +18,6 @@ const events = defineCollection({
             }).default({path: '/assets/events/placeholder.png', alt: 'placeholder event img'})
         ),
         description: z.string().optional(),
-        date: z.string().optional(),
         featured: z.boolean().default(false)
     }),
 });

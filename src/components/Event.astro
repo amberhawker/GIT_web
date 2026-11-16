@@ -9,12 +9,16 @@ interface Img {
 
 interface Props {
   eventTitle: string;
+  eventDate?: string;
+  eventLocation?: string;
   imgs: Array<Img>;
   description: string;
 }
 
 const {
   eventTitle = "Girls in Tech",
+  eventDate = "November 16th, 2026",
+  eventLocation = "TBD",
   imgs = [
     { path: '/assets/animatedgit.gif', alt: "animated git logo" },
     { path: '/assets/GITInit.png', alt: "git logo" }
