@@ -30,6 +30,7 @@ const resolvedImgs = imgs.map((img) => ({
   src: resolveAssetImage(img.path),
   alt: img.alt || eventTitle,
 }));
+const multi = resolvedImgs.length > 1;
 ---
 
 <div class="event-card mockup-window bg-base-100 border border-base-300 w-full h-full flex flex-col justify-between" data-title={eventTitle}>
@@ -49,14 +50,15 @@ const resolvedImgs = imgs.map((img) => ({
         ))}
       </div>
 
-      <!-- Button layered directly on top of the photos -->
-      <button 
-        type="button" 
-        class="next-btn btn btn-primary btn-sm absolute bottom-2 right-2 z-20 shadow-md"
-        aria-label="Next photo"
-      >
-        ❯
-      </button>
+      {multi && (
+        <button 
+          type="button" 
+          class="next-btn btn btn-primary btn-sm absolute bottom-2 right-2 z-20 shadow-md"
+          aria-label="Next photo"
+        >
+          ❯
+        </button>
+      )}
     </div>
 
     <div class="divider divider-horizontal hidden xl:flex self-stretch"></div>
