@@ -2,7 +2,7 @@
  * Bundled local content for admin GET fallbacks.
  * Writes still go through GitHub; reads use these when the token/API fails.
  */
-import { isValidImageFilename, publicAssetPath } from './content';
+import { publicAssetPath } from './content';
 
 const eventModules = import.meta.glob('/src/data/events/*.json', { eager: true });
 const execModules = import.meta.glob('/src/data/execs/*.json', { eager: true });
@@ -46,13 +46,10 @@ export function listLocalGallery(): { name: string; path: string }[] {
 
 /** Read a gallery image from the local workspace (dev / nodejs_compat). */
 export async function readLocalGalleryFile(name: string): Promise<Uint8Array | null> {
-	if (!isValidImageFilename(name)) return null;
 	try {
 		const { readFile } = await import('node:fs/promises');
-		const { basename, join } = await import('node:path');
-		const safe = basename(name);
-		if (safe !== name || !isValidImageFilename(safe)) return null;
-		const bytes = await readFile(join(process.cwd(), 'src/assets/gallery', safe));
+		const { join } = await import('node:path');
+		const bytes = await readFile(join(process.cwd(), 'src/assets/gallery', name));
 		return new Uint8Array(bytes);
 	} catch {
 		return null;

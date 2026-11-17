@@ -50,15 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
 			? [{ filename: raw.filename, contentBase64: raw.contentBase64 }]
 			: undefined);
 
-	let takenNames: string[] = [];
-	try {
-		const entries = await listRepoDirectory(GALLERY_ASSETS);
-		takenNames = entries.filter((e) => e.type === 'file').map((e) => e.name);
-	} catch {
-		takenNames = listLocalGallery().map((img) => img.name);
-	}
-
-	const files = normalizeUploads(filesInput, { takenNames });
+	const files = normalizeUploads(filesInput);
 	if (typeof files === 'string') return errorResponse(files);
 	if (files.length === 0) return errorResponse('No files to upload');
 

@@ -2,9 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import {
-	EXECS_ASSETS,
 	EXECS_DIR,
-	applyUploadsToExec,
 	errorResponse,
 	fileChangesForUploads,
 	isValidSlug,
@@ -52,18 +50,8 @@ export const POST: APIRoute = async ({ request }) => {
 	const data = normalizeExec(raw.data ?? raw);
 	if (typeof data === 'string') return errorResponse(data);
 
-	let takenNames: string[] = [];
-	try {
-		const entries = await listRepoDirectory(EXECS_ASSETS);
-		takenNames = entries.filter((e) => e.type === 'file').map((e) => e.name);
-	} catch {
-		takenNames = [];
-	}
-
-	const files = normalizeUploads(raw.files, { takenNames });
+	const files = normalizeUploads(raw.files);
 	if (typeof files === 'string') return errorResponse(files);
-
-	const merged = applyUploadsToExec(data, files);
 
 	const jsonPath = `${EXECS_DIR}/${id}.json`;
 	const existing = await getRepoTextFile(jsonPath);
@@ -71,10 +59,10 @@ export const POST: APIRoute = async ({ request }) => {
 
 	try {
 		const result = await commitFiles(`admin: create exec ${id}`, [
-			{ path: jsonPath, content: prettyJson(merged) },
+			{ path: jsonPath, content: prettyJson(data) },
 			...fileChangesForUploads('execs', files),
 		]);
-		return jsonResponse({ ok: true, id, data: merged, commit: result }, 201);
+		return jsonResponse({ ok: true, id, data, commit: result }, 201);
 	} catch (err) {
 		return githubError(err);
 	}
