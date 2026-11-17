@@ -105,6 +105,17 @@ const authed = Astro.locals.adminAuthed;
 								<span class="admin-label">upload images (optional)</span>
 								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
 							</label>
+							<div
+								id="events-progress"
+								class="admin-progress admin-field-full hidden"
+								role="progressbar"
+								aria-valuemin="0"
+								aria-valuemax="100"
+								aria-valuenow="0"
+								aria-label="Event image upload progress"
+							>
+								<div class="admin-progress-bar"></div>
+							</div>
 							<div class="admin-field-full">
 								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 									Save event
@@ -159,6 +170,17 @@ const authed = Astro.locals.adminAuthed;
 								<span class="admin-label">upload images (optional)</span>
 								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
 							</label>
+							<div
+								id="execs-progress"
+								class="admin-progress admin-field-full hidden"
+								role="progressbar"
+								aria-valuemin="0"
+								aria-valuemax="100"
+								aria-valuenow="0"
+								aria-label="Exec image upload progress"
+							>
+								<div class="admin-progress-bar"></div>
+							</div>
 							<div class="admin-field-full">
 								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 									Save exec
@@ -178,6 +200,17 @@ const authed = Astro.locals.adminAuthed;
 							<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 								Upload
 							</button>
+							<div
+								id="gallery-progress"
+								class="admin-progress hidden"
+								role="progressbar"
+								aria-valuemin="0"
+								aria-valuemax="100"
+								aria-valuenow="0"
+								aria-label="Gallery upload progress"
+							>
+								<div class="admin-progress-bar"></div>
+							</div>
 						</form>
 						<div id="gallery-grid" class="admin-gallery-grid"></div>
 					</section>

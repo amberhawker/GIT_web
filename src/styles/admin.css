@@ -410,3 +410,22 @@
 .admin-gallery-delete:hover {
 	color: #7a1510;
 }
+
+.admin-progress {
+	grid-column: 1 / -1;
+	height: 0.55rem;
+	overflow: hidden;
+	border: 2px solid var(--color-base-content);
+	background: #fff;
+}
+
+.admin-progress.hidden {
+	display: none;
+}
+
+.admin-progress-bar {
+	height: 100%;
+	width: 0%;
+	background: var(--color-primary, #ec4899);
+	transition: width 80ms linear;
+}

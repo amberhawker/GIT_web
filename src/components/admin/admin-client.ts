@@ -17,15 +17,47 @@ type ExecData = {
 	description: string;
 };
 
-type CommitInfo = { sha?: string; htmlUrl?: string; message?: string };
+type CommitInfo = { sha?: string; htmlUrl?: string; message?: string; source?: 'github' | 'local' };
 type ListItem = { id: string; title: string; meta?: string };
 type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiInit = RequestInit & { onUploadProgress?: (percent: number) => void };
 
-async function api<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
-	const res = await fetch(path, {
-		...init,
-		headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-	});
+async function api<T>(path: string, init?: ApiInit): Promise<ApiResult<T>> {
+	const { onUploadProgress, ...rest } = init ?? {};
+	const headers = { 'Content-Type': 'application/json', ...(rest.headers ?? {}) };
+
+	// XHR so we can report real upload progress for media saves.
+	if (onUploadProgress && typeof rest.body === 'string') {
+		return new Promise((resolve) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open(rest.method ?? 'GET', path);
+			for (const [key, value] of Object.entries(headers)) {
+				if (typeof value === 'string') xhr.setRequestHeader(key, value);
+			}
+			xhr.upload.onprogress = (event) => {
+				if (!event.lengthComputable || event.total <= 0) return;
+				onUploadProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+			};
+			xhr.onload = () => {
+				let body: T & { error?: string };
+				try {
+					body = JSON.parse(xhr.responseText || '{}') as T & { error?: string };
+				} catch {
+					body = {} as T & { error?: string };
+				}
+				if (xhr.status < 200 || xhr.status >= 300) {
+					resolve({ ok: false, error: body.error ?? `Request failed (${xhr.status})` });
+					return;
+				}
+				onUploadProgress(100);
+				resolve({ ok: true, data: body as T });
+			};
+			xhr.onerror = () => resolve({ ok: false, error: 'Network error' });
+			xhr.send(rest.body as string);
+		});
+	}
+
+	const res = await fetch(path, { ...rest, headers });
 	const body = (await res.json().catch(() => ({}))) as T & { error?: string };
 	if (!res.ok) return { ok: false, error: body.error ?? `Request failed (${res.status})` };
 	return { ok: true, data: body as T };
@@ -58,9 +90,28 @@ function setStatus(el: HTMLElement | null, message: string, kind: 'info' | 'ok' 
 	el.classList.toggle('is-err', kind === 'err');
 }
 
-function commitNote(commit?: CommitInfo): string {
+function commitNote(commit?: CommitInfo, source?: 'github' | 'local'): string {
+	const from = source ?? commit?.source;
+	if (from === 'local' || commit?.sha?.startsWith('local-')) {
+		return 'Saved locally (dev). Files written under src/; commit when ready.';
+	}
 	if (!commit?.sha) return 'Saved.';
 	return `Saved (${commit.sha.slice(0, 7)}). Site updates after Cloudflare rebuild.`;
+}
+
+function setProgress(el: HTMLElement | null, percent: number | null) {
+	if (!el) return;
+	const bar = el.querySelector('.admin-progress-bar') as HTMLElement | null;
+	if (percent === null) {
+		el.classList.add('hidden');
+		el.setAttribute('aria-valuenow', '0');
+		if (bar) bar.style.width = '0%';
+		return;
+	}
+	const value = Math.max(0, Math.min(100, percent));
+	el.classList.remove('hidden');
+	el.setAttribute('aria-valuenow', String(value));
+	if (bar) bar.style.width = `${value}%`;
 }
 
 function qs<T extends HTMLElement>(root: ParentNode, selector: string): T {
@@ -152,6 +203,7 @@ async function initEvents(root: HTMLElement) {
 	const featuredInput = qs<HTMLInputElement>(form, '[name="featured"]');
 	const imgsInput = qs<HTMLTextAreaElement>(form, '[name="imgs"]');
 	const filesInput = qs<HTMLInputElement>(form, '[name="files"]');
+	const progress = root.querySelector('#events-progress') as HTMLElement | null;
 	const newBtn = qs<HTMLButtonElement>(root, '#event-new');
 	const deleteBtn = qs<HTMLButtonElement>(root, '#event-delete');
 
@@ -170,6 +222,7 @@ async function initEvents(root: HTMLElement) {
 		imgsInput.value = formatImgs(data?.imgs);
 		filesInput.value = '';
 		deleteBtn.disabled = !id;
+		setProgress(progress, null);
 	}
 
 	function selectItem(id: string) {
@@ -240,22 +293,41 @@ async function initEvents(root: HTMLElement) {
 		};
 		const files = await collectUploads(filesInput);
 		const isNew = !selectedId;
+		const trackUpload = files.length > 0;
 
-		setStatus(status, 'Saving…');
+		setStatus(status, trackUpload ? 'Uploading…' : 'Saving…');
+		setProgress(progress, trackUpload ? 0 : null);
+		const onUploadProgress = trackUpload
+			? (percent: number) => {
+					setProgress(progress, percent);
+					setStatus(status, `Uploading… ${percent}%`);
+				}
+			: undefined;
+
 		const res = isNew
-			? await api<{ commit?: CommitInfo }>('/api/admin/events', {
+			? await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>('/api/admin/events', {
 					method: 'POST',
 					body: JSON.stringify({ id, data, files }),
+					onUploadProgress,
 				})
-			: await api<{ commit?: CommitInfo }>(`/api/admin/events/${encodeURIComponent(id)}`, {
-					method: 'PUT',
-					body: JSON.stringify({ data, files }),
-				});
+			: await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>(
+					`/api/admin/events/${encodeURIComponent(id)}`,
+					{
+						method: 'PUT',
+						body: JSON.stringify({ data, files }),
+						onUploadProgress,
+					}
+				);
 
-		if (!res.ok) return setStatus(status, res.error, 'err');
+		if (!res.ok) {
+			setProgress(progress, null);
+			return setStatus(status, res.error, 'err');
+		}
 		selectedId = id;
-		setStatus(status, commitNote(res.data.commit), 'ok');
+		setProgress(progress, trackUpload ? 100 : null);
+		setStatus(status, commitNote(res.data.commit, res.data.source), 'ok');
 		await refresh();
+		setProgress(progress, null);
 	});
 
 	await refresh();
@@ -273,6 +345,7 @@ async function initExecs(root: HTMLElement) {
 	const imgInput = qs<HTMLInputElement>(form, '[name="img"]');
 	const imgsInput = qs<HTMLTextAreaElement>(form, '[name="imgs"]');
 	const filesInput = qs<HTMLInputElement>(form, '[name="files"]');
+	const progress = root.querySelector('#execs-progress') as HTMLElement | null;
 	const newBtn = qs<HTMLButtonElement>(root, '#exec-new');
 	const deleteBtn = qs<HTMLButtonElement>(root, '#exec-delete');
 
@@ -292,6 +365,7 @@ async function initExecs(root: HTMLElement) {
 		imgsInput.value = formatImgs(data?.imgs);
 		filesInput.value = '';
 		deleteBtn.disabled = !id;
+		setProgress(progress, null);
 	}
 
 	function selectItem(id: string) {
@@ -370,22 +444,41 @@ async function initExecs(root: HTMLElement) {
 		};
 		const files = await collectUploads(filesInput);
 		const isNew = !selectedId;
+		const trackUpload = files.length > 0;
 
-		setStatus(status, 'Saving…');
+		setStatus(status, trackUpload ? 'Uploading…' : 'Saving…');
+		setProgress(progress, trackUpload ? 0 : null);
+		const onUploadProgress = trackUpload
+			? (percent: number) => {
+					setProgress(progress, percent);
+					setStatus(status, `Uploading… ${percent}%`);
+				}
+			: undefined;
+
 		const res = isNew
-			? await api<{ commit?: CommitInfo }>('/api/admin/execs', {
+			? await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>('/api/admin/execs', {
 					method: 'POST',
 					body: JSON.stringify({ id, data, files }),
+					onUploadProgress,
 				})
-			: await api<{ commit?: CommitInfo }>(`/api/admin/execs/${encodeURIComponent(id)}`, {
-					method: 'PUT',
-					body: JSON.stringify({ data, files }),
-				});
+			: await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>(
+					`/api/admin/execs/${encodeURIComponent(id)}`,
+					{
+						method: 'PUT',
+						body: JSON.stringify({ data, files }),
+						onUploadProgress,
+					}
+				);
 
-		if (!res.ok) return setStatus(status, res.error, 'err');
+		if (!res.ok) {
+			setProgress(progress, null);
+			return setStatus(status, res.error, 'err');
+		}
 		selectedId = id;
-		setStatus(status, commitNote(res.data.commit), 'ok');
+		setProgress(progress, trackUpload ? 100 : null);
+		setStatus(status, commitNote(res.data.commit, res.data.source), 'ok');
 		await refresh();
+		setProgress(progress, null);
 	});
 
 	await refresh();
@@ -395,6 +488,7 @@ async function initGallery(root: HTMLElement) {
 	const grid = qs<HTMLElement>(root, '#gallery-grid');
 	const form = qs<HTMLFormElement>(root, '#gallery-form');
 	const status = qs<HTMLElement>(root, '#gallery-status');
+	const progress = root.querySelector('#gallery-progress') as HTMLElement | null;
 	const filesInput = qs<HTMLInputElement>(form, '[name="files"]');
 
 	async function refresh() {
@@ -433,7 +527,7 @@ async function initGallery(root: HTMLElement) {
 						{ method: 'DELETE' }
 					);
 					if (!del.ok) return setStatus(status, del.error, 'err');
-					setStatus(status, commitNote(del.data.commit), 'ok');
+					setStatus(status, commitNote(del.data.commit, del.data.source), 'ok');
 					await refresh();
 				});
 				return card;
@@ -448,15 +542,25 @@ async function initGallery(root: HTMLElement) {
 		const files = await collectUploads(filesInput);
 		if (files.length === 0) return setStatus(status, 'Choose at least one image', 'err');
 
-		setStatus(status, 'Uploading…');
-		const res = await api<{ commit?: CommitInfo }>('/api/admin/gallery', {
+		setStatus(status, 'Uploading… 0%');
+		setProgress(progress, 0);
+		const res = await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>('/api/admin/gallery', {
 			method: 'POST',
 			body: JSON.stringify({ files }),
+			onUploadProgress: (percent) => {
+				setProgress(progress, percent);
+				setStatus(status, `Uploading… ${percent}%`);
+			},
 		});
-		if (!res.ok) return setStatus(status, res.error, 'err');
+		if (!res.ok) {
+			setProgress(progress, null);
+			return setStatus(status, res.error, 'err');
+		}
 		filesInput.value = '';
-		setStatus(status, commitNote(res.data.commit), 'ok');
+		setProgress(progress, 100);
+		setStatus(status, commitNote(res.data.commit, res.data.source), 'ok');
 		await refresh();
+		setProgress(progress, null);
 	});
 
 	await refresh();

@@ -12,18 +12,18 @@ import {
 	normalizeUploads,
 	prettyJson,
 } from '../../../../lib/admin/content';
-import { commitFiles, getRepoTextFile, GitHubError } from '../../../../lib/admin/github';
+import { getAdminTextFile, persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
 
 export const GET: APIRoute = async ({ params }) => {
 	const id = params.id ?? '';
 	if (!isValidSlug(id)) return errorResponse('Invalid id');
 
 	try {
-		const file = await getRepoTextFile(`${EVENTS_DIR}/${id}.json`);
+		const file = await getAdminTextFile(`${EVENTS_DIR}/${id}.json`);
 		if (!file) return errorResponse('Event not found', 404);
-		return jsonResponse({ id, data: JSON.parse(file.content) });
+		return jsonResponse({ id, data: JSON.parse(file.content), source: file.source });
 	} catch (err) {
-		return githubError(err);
+		return persistErrorResponse(err, 'Failed to load or save event');
 	}
 };
 
@@ -46,17 +46,18 @@ export const PUT: APIRoute = async ({ params, request }) => {
 	if (typeof files === 'string') return errorResponse(files);
 
 	const jsonPath = `${EVENTS_DIR}/${id}.json`;
-	const existing = await getRepoTextFile(jsonPath);
-	if (!existing) return errorResponse('Event not found', 404);
 
 	try {
-		const result = await commitFiles(`admin: update event ${id}`, [
+		const existing = await getAdminTextFile(jsonPath);
+		if (!existing) return errorResponse('Event not found', 404);
+
+		const result = await persistAdminChanges(`admin: update event ${id}`, [
 			{ path: jsonPath, content: prettyJson(data) },
 			...fileChangesForUploads('events', files),
 		]);
-		return jsonResponse({ ok: true, id, data, commit: result });
+		return jsonResponse({ ok: true, id, data, commit: result, source: result.source });
 	} catch (err) {
-		return githubError(err);
+		return persistErrorResponse(err, 'Failed to load or save event');
 	}
 };
 
@@ -65,33 +66,26 @@ export const DELETE: APIRoute = async ({ params }) => {
 	if (!isValidSlug(id)) return errorResponse('Invalid id');
 
 	const jsonPath = `${EVENTS_DIR}/${id}.json`;
-	const existing = await getRepoTextFile(jsonPath);
-	if (!existing) return errorResponse('Event not found', 404);
-
-	let data;
-	try {
-		data = normalizeEvent(JSON.parse(existing.content));
-	} catch {
-		data = null;
-	}
-
-	const changes = [
-		{ path: jsonPath, delete: true as const },
-		...(typeof data === 'object' && data ? assetDeletesFromEntry(data) : []),
-	];
 
 	try {
-		const result = await commitFiles(`admin: delete event ${id}`, changes);
-		return jsonResponse({ ok: true, id, commit: result });
+		const existing = await getAdminTextFile(jsonPath);
+		if (!existing) return errorResponse('Event not found', 404);
+
+		let data;
+		try {
+			data = normalizeEvent(JSON.parse(existing.content));
+		} catch {
+			data = null;
+		}
+
+		const changes = [
+			{ path: jsonPath, delete: true as const },
+			...(typeof data === 'object' && data ? assetDeletesFromEntry(data) : []),
+		];
+
+		const result = await persistAdminChanges(`admin: delete event ${id}`, changes);
+		return jsonResponse({ ok: true, id, commit: result, source: result.source });
 	} catch (err) {
-		return githubError(err);
+		return persistErrorResponse(err, 'Failed to load or save event');
 	}
 };
-
-function githubError(err: unknown): Response {
-	if (err instanceof GitHubError) {
-		return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
-	}
-	console.error(err);
-	return errorResponse('Failed to load or save event', 500);
-}

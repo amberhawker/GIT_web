@@ -8,13 +8,9 @@ import {
 	jsonResponse,
 	repoAssetPath,
 } from '../../../../lib/admin/content';
-import {
-	commitFiles,
-	getRepoBinaryFile,
-	GitHubError,
-	listRepoDirectory,
-} from '../../../../lib/admin/github';
-import { readLocalGalleryFile } from '../../../../lib/admin/local';
+import { getRepoBinaryFile, listRepoDirectory } from '../../../../lib/admin/github';
+import { isLocalAdminWriteEnabled, listLocalGallery, readLocalGalleryFile } from '../../../../lib/admin/local';
+import { persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
 
 function contentTypeFor(name: string): string {
 	const lower = name.toLowerCase();
@@ -58,19 +54,24 @@ export const DELETE: APIRoute = async ({ params }) => {
 	if (!isValidImageFilename(name)) return errorResponse('Invalid image name');
 
 	try {
-		const entries = await listRepoDirectory(GALLERY_ASSETS);
-		const exists = entries.some((entry) => entry.type === 'file' && entry.name === name);
+		let exists = false;
+		try {
+			const entries = await listRepoDirectory(GALLERY_ASSETS);
+			exists = entries.some((entry) => entry.type === 'file' && entry.name === name);
+		} catch (err) {
+			if (!isLocalAdminWriteEnabled()) throw err;
+			console.warn('admin gallery delete: GitHub list failed, checking local', err);
+			const local = await listLocalGallery();
+			exists = local.some((image) => image.name === name);
+		}
+
 		if (!exists) return errorResponse('Image not found', 404);
 
-		const result = await commitFiles(`admin: delete gallery image ${name}`, [
+		const result = await persistAdminChanges(`admin: delete gallery image ${name}`, [
 			{ path: repoAssetPath('gallery', name), delete: true },
 		]);
-		return jsonResponse({ ok: true, name, commit: result });
+		return jsonResponse({ ok: true, name, commit: result, source: result.source });
 	} catch (err) {
-		if (err instanceof GitHubError) {
-			return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
-		}
-		console.error(err);
-		return errorResponse('Failed to delete gallery image', 500);
+		return persistErrorResponse(err, 'Failed to delete gallery image');
 	}
 };

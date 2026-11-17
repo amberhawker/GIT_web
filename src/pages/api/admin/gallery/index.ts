@@ -9,8 +9,9 @@ import {
 	normalizeUploads,
 	publicAssetPath,
 } from '../../../../lib/admin/content';
-import { commitFiles, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import { listRepoDirectory } from '../../../../lib/admin/github';
 import { listLocalGallery } from '../../../../lib/admin/local';
+import { persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
 
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif)$/i;
 
@@ -29,7 +30,7 @@ export const GET: APIRoute = async () => {
 		return jsonResponse({ images });
 	} catch (err) {
 		console.warn('admin gallery: GitHub read failed, using local files', err);
-		return jsonResponse({ images: listLocalGallery(), source: 'local' });
+		return jsonResponse({ images: await listLocalGallery(), source: 'local' });
 	}
 };
 
@@ -55,7 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
 	if (files.length === 0) return errorResponse('No files to upload');
 
 	try {
-		const result = await commitFiles(
+		const result = await persistAdminChanges(
 			files.length === 1
 				? `admin: add gallery image ${files[0].filename}`
 				: `admin: add ${files.length} gallery images`,
@@ -69,18 +70,11 @@ export const POST: APIRoute = async ({ request }) => {
 					path: publicAssetPath('gallery', f.filename),
 				})),
 				commit: result,
+				source: result.source,
 			},
 			201
 		);
 	} catch (err) {
-		return githubError(err);
+		return persistErrorResponse(err, 'Failed to load or save gallery');
 	}
 };
-
-function githubError(err: unknown): Response {
-	if (err instanceof GitHubError) {
-		return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
-	}
-	console.error(err);
-	return errorResponse('Failed to load or save gallery', 500);
-}

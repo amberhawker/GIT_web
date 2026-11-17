@@ -11,8 +11,9 @@ import {
 	normalizeUploads,
 	prettyJson,
 } from '../../../../lib/admin/content';
-import { commitFiles, getRepoTextFile, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import { getRepoTextFile, listRepoDirectory } from '../../../../lib/admin/github';
 import { listLocalExecs } from '../../../../lib/admin/local';
+import { getAdminTextFile, persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
 
 export const GET: APIRoute = async () => {
 	try {
@@ -31,7 +32,7 @@ export const GET: APIRoute = async () => {
 		return jsonResponse({ execs });
 	} catch (err) {
 		console.warn('admin execs: GitHub read failed, using local files', err);
-		return jsonResponse({ execs: listLocalExecs(), source: 'local' });
+		return jsonResponse({ execs: await listLocalExecs(), source: 'local' });
 	}
 };
 
@@ -54,24 +55,17 @@ export const POST: APIRoute = async ({ request }) => {
 	if (typeof files === 'string') return errorResponse(files);
 
 	const jsonPath = `${EXECS_DIR}/${id}.json`;
-	const existing = await getRepoTextFile(jsonPath);
-	if (existing) return errorResponse(`Exec already exists: ${id}`, 409);
 
 	try {
-		const result = await commitFiles(`admin: create exec ${id}`, [
+		const existing = await getAdminTextFile(jsonPath);
+		if (existing) return errorResponse(`Exec already exists: ${id}`, 409);
+
+		const result = await persistAdminChanges(`admin: create exec ${id}`, [
 			{ path: jsonPath, content: prettyJson(data) },
 			...fileChangesForUploads('execs', files),
 		]);
-		return jsonResponse({ ok: true, id, data, commit: result }, 201);
+		return jsonResponse({ ok: true, id, data, commit: result, source: result.source }, 201);
 	} catch (err) {
-		return githubError(err);
+		return persistErrorResponse(err, 'Failed to load or save execs');
 	}
 };
-
-function githubError(err: unknown): Response {
-	if (err instanceof GitHubError) {
-		return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
-	}
-	console.error(err);
-	return errorResponse('Failed to load or save execs', 500);
-}

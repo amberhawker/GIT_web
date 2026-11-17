@@ -11,8 +11,9 @@ import {
 	normalizeUploads,
 	prettyJson,
 } from '../../../../lib/admin/content';
-import { commitFiles, getRepoTextFile, GitHubError, listRepoDirectory } from '../../../../lib/admin/github';
+import { getRepoTextFile, listRepoDirectory } from '../../../../lib/admin/github';
 import { listLocalEvents } from '../../../../lib/admin/local';
+import { getAdminTextFile, persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
 
 export const GET: APIRoute = async () => {
 	try {
@@ -30,9 +31,8 @@ export const GET: APIRoute = async () => {
 		events.sort((a, b) => a.id.localeCompare(b.id));
 		return jsonResponse({ events });
 	} catch (err) {
-		// Local checkout has the JSON; use it when GitHub token/API is unavailable.
 		console.warn('admin events: GitHub read failed, using local files', err);
-		return jsonResponse({ events: listLocalEvents(), source: 'local' });
+		return jsonResponse({ events: await listLocalEvents(), source: 'local' });
 	}
 };
 
@@ -55,24 +55,17 @@ export const POST: APIRoute = async ({ request }) => {
 	if (typeof files === 'string') return errorResponse(files);
 
 	const jsonPath = `${EVENTS_DIR}/${id}.json`;
-	const existing = await getRepoTextFile(jsonPath);
-	if (existing) return errorResponse(`Event already exists: ${id}`, 409);
 
 	try {
-		const result = await commitFiles(`admin: create event ${id}`, [
+		const existing = await getAdminTextFile(jsonPath);
+		if (existing) return errorResponse(`Event already exists: ${id}`, 409);
+
+		const result = await persistAdminChanges(`admin: create event ${id}`, [
 			{ path: jsonPath, content: prettyJson(data) },
 			...fileChangesForUploads('events', files),
 		]);
-		return jsonResponse({ ok: true, id, data, commit: result }, 201);
+		return jsonResponse({ ok: true, id, data, commit: result, source: result.source }, 201);
 	} catch (err) {
-		return githubError(err);
+		return persistErrorResponse(err, 'Failed to load or save events');
 	}
 };
-
-function githubError(err: unknown): Response {
-	if (err instanceof GitHubError) {
-		return errorResponse(err.message, err.status >= 400 && err.status < 600 ? err.status : 502);
-	}
-	console.error(err);
-	return errorResponse('Failed to load or save events', 500);
-}
