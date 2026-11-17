@@ -20,6 +20,11 @@ type ExecData = {
 type CommitInfo = { sha?: string; htmlUrl?: string; message?: string };
 type ListItem = { id: string; title: string; meta?: string };
 type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
+type UploadFile = { filename: string; contentBase64: string };
+
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+const IMAGE_EXT_RE = /\.(png|jpe?g|webp|gif)$/i;
 
 async function api<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
 	const res = await fetch(path, {
@@ -29,6 +34,24 @@ async function api<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
 	const body = (await res.json().catch(() => ({}))) as T & { error?: string };
 	if (!res.ok) return { ok: false, error: body.error ?? `Request failed (${res.status})` };
 	return { ok: true, data: body as T };
+}
+
+function sanitizeImageFilename(name: string): string {
+	const base = name.split(/[/\\]/).pop()?.trim() ?? '';
+	const extMatch = base.match(IMAGE_EXT_RE);
+	if (!extMatch) return '';
+
+	let ext = extMatch[0].toLowerCase();
+	if (ext === '.jpeg') ext = '.jpg';
+
+	const stem = base
+		.slice(0, -extMatch[0].length)
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+		.slice(0, 80);
+
+	return `${stem || 'image'}${ext}`;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -43,10 +66,34 @@ function fileToBase64(file: File): Promise<string> {
 	});
 }
 
-async function collectUploads(input: HTMLInputElement) {
-	const files = [];
+async function collectUploads(input: HTMLInputElement): Promise<UploadFile[] | string> {
+	const files: UploadFile[] = [];
+	const taken = new Set<string>();
+
 	for (const file of Array.from(input.files ?? [])) {
-		files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
+		if (file.size > MAX_UPLOAD_BYTES) {
+			return `${file.name} is too large (max 8MB)`;
+		}
+		if (file.type && !ALLOWED_IMAGE_TYPES.has(file.type)) {
+			return `${file.name}: use PNG, JPEG, WEBP, or GIF`;
+		}
+
+		const sanitized = sanitizeImageFilename(file.name);
+		if (!sanitized) {
+			return `invalid filename: ${file.name}`;
+		}
+
+		const ext = sanitized.match(IMAGE_EXT_RE)?.[0] ?? '.png';
+		const stem = sanitized.slice(0, -ext.length);
+		let filename = sanitized;
+		let n = 2;
+		while (taken.has(filename.toLowerCase())) {
+			filename = `${stem}-${n}${ext}`;
+			n += 1;
+		}
+		taken.add(filename.toLowerCase());
+
+		files.push({ filename, contentBase64: await fileToBase64(file) });
 	}
 	return files;
 }
@@ -239,6 +286,7 @@ async function initEvents(root: HTMLElement) {
 			imgs,
 		};
 		const files = await collectUploads(filesInput);
+		if (typeof files === 'string') return setStatus(status, files, 'err');
 		const isNew = !selectedId;
 
 		setStatus(status, 'Saving…');
@@ -369,6 +417,7 @@ async function initExecs(root: HTMLElement) {
 			imgs,
 		};
 		const files = await collectUploads(filesInput);
+		if (typeof files === 'string') return setStatus(status, files, 'err');
 		const isNew = !selectedId;
 
 		setStatus(status, 'Saving…');
@@ -446,6 +495,7 @@ async function initGallery(root: HTMLElement) {
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
 		const files = await collectUploads(filesInput);
+		if (typeof files === 'string') return setStatus(status, files, 'err');
 		if (files.length === 0) return setStatus(status, 'Choose at least one image', 'err');
 
 		setStatus(status, 'Uploading…');

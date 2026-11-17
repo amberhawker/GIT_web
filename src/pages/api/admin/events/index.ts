@@ -2,7 +2,9 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import {
+	EVENTS_ASSETS,
 	EVENTS_DIR,
+	applyUploadsToEvent,
 	errorResponse,
 	fileChangesForUploads,
 	isValidSlug,
@@ -51,8 +53,18 @@ export const POST: APIRoute = async ({ request }) => {
 	const data = normalizeEvent(raw.data ?? raw);
 	if (typeof data === 'string') return errorResponse(data);
 
-	const files = normalizeUploads(raw.files);
+	let takenNames: string[] = [];
+	try {
+		const entries = await listRepoDirectory(EVENTS_ASSETS);
+		takenNames = entries.filter((e) => e.type === 'file').map((e) => e.name);
+	} catch {
+		takenNames = [];
+	}
+
+	const files = normalizeUploads(raw.files, { takenNames });
 	if (typeof files === 'string') return errorResponse(files);
+
+	const merged = applyUploadsToEvent(data, files);
 
 	const jsonPath = `${EVENTS_DIR}/${id}.json`;
 	const existing = await getRepoTextFile(jsonPath);
@@ -60,10 +72,10 @@ export const POST: APIRoute = async ({ request }) => {
 
 	try {
 		const result = await commitFiles(`admin: create event ${id}`, [
-			{ path: jsonPath, content: prettyJson(data) },
+			{ path: jsonPath, content: prettyJson(merged) },
 			...fileChangesForUploads('events', files),
 		]);
-		return jsonResponse({ ok: true, id, data, commit: result }, 201);
+		return jsonResponse({ ok: true, id, data: merged, commit: result }, 201);
 	} catch (err) {
 		return githubError(err);
 	}

@@ -103,7 +103,13 @@ const authed = Astro.locals.adminAuthed;
 							</label>
 							<label class="admin-field admin-field-full">
 								<span class="admin-label">upload images (optional)</span>
-								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+								<input
+									name="files"
+									type="file"
+									accept="image/png,image/jpeg,image/webp,image/gif"
+									multiple
+									class="admin-file"
+								/>
 							</label>
 							<div class="admin-field-full">
 								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
@@ -157,7 +163,13 @@ const authed = Astro.locals.adminAuthed;
 							</label>
 							<label class="admin-field admin-field-full">
 								<span class="admin-label">upload images (optional)</span>
-								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+								<input
+									name="files"
+									type="file"
+									accept="image/png,image/jpeg,image/webp,image/gif"
+									multiple
+									class="admin-file"
+								/>
 							</label>
 							<div class="admin-field-full">
 								<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
@@ -173,7 +185,13 @@ const authed = Astro.locals.adminAuthed;
 						<form id="gallery-form" class="admin-form admin-form-upload">
 							<label class="admin-field">
 								<span class="admin-label">upload images</span>
-								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+								<input
+									name="files"
+									type="file"
+									accept="image/png,image/jpeg,image/webp,image/gif"
+									multiple
+									class="admin-file"
+								/>
 							</label>
 							<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 								Upload
