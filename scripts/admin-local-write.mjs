@@ -99,10 +99,13 @@ async function readBody(req) {
  * active in KV, so revoked sessions are rejected here too.
  */
 async function isSessionActiveInWorker(req) {
-	const host = req.headers.host;
-	if (!host) return false;
+	// Use the socket this server accepted the request on, never the client-controlled Host header.
+	const { localAddress, localPort } = req.socket ?? {};
+	if (!localAddress || !localPort) return false;
+	const address = localAddress.startsWith('::ffff:') ? localAddress.slice(7) : localAddress;
+	const host = address.includes(':') ? `[${address}]` : address;
 	try {
-		const res = await fetch(`http://${host}/api/admin/session`, {
+		const res = await fetch(`http://${host}:${localPort}/api/admin/session`, {
 			headers: { cookie: req.headers.cookie ?? '' },
 		});
 		if (!res.ok) return false;
