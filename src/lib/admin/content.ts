@@ -1,4 +1,5 @@
 import type { FileChange } from './github';
+import { validateImageUpload, validateUploadBatch } from './upload-rules.mjs';
 
 export const EVENTS_DIR = 'src/data/events';
 export const EXECS_DIR = 'src/data/execs';
@@ -154,7 +155,7 @@ export function normalizeUploads(value: unknown): UploadedFile[] | string {
 	if (value === undefined || value === null) return [];
 	if (!Array.isArray(value)) return 'files must be an array';
 
-	const files: UploadedFile[] = [];
+	const files: (UploadedFile & { size: number })[] = [];
 	for (const item of value) {
 		if (!item || typeof item !== 'object') return 'invalid files entry';
 		const file = item as Record<string, unknown>;
@@ -168,12 +169,13 @@ export function normalizeUploads(value: unknown): UploadedFile[] | string {
 		if (typeof file.contentBase64 !== 'string' || !file.contentBase64) {
 			return `missing contentBase64 for ${file.filename}`;
 		}
-		files.push({
-			filename,
-			contentBase64: file.contentBase64.replace(/^data:[^;]+;base64,/, ''),
-		});
+		const checked = validateImageUpload(filename, file.contentBase64);
+		if (!checked.ok) return checked.error;
+		files.push({ filename, contentBase64: checked.contentBase64, size: checked.size });
 	}
-	return files;
+	const batchError = validateUploadBatch(files);
+	if (batchError) return batchError;
+	return files.map(({ filename, contentBase64 }) => ({ filename, contentBase64 }));
 }
 
 export function prettyJson(data: unknown): string {
