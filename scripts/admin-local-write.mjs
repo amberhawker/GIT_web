@@ -6,6 +6,11 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import {
+	MAX_ADMIN_REQUEST_BYTES,
+	validateImageUpload,
+	validateUploadBatch,
+} from '../src/lib/admin/upload-rules.mjs';
 
 const COOKIE_NAME = 'git_admin_session';
 const ALLOWED_PREFIXES = [
@@ -73,12 +78,50 @@ function isValidSessionToken(secret, token) {
 	}
 }
 
+class BodyTooLargeError extends Error {}
+
 async function readBody(req) {
+	const declared = Number(req.headers['content-length'] ?? 0);
+	if (declared > MAX_ADMIN_REQUEST_BYTES) throw new BodyTooLargeError();
 	const chunks = [];
+	let total = 0;
 	for await (const chunk of req) {
-		chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+		const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+		total += buf.length;
+		if (total > MAX_ADMIN_REQUEST_BYTES) throw new BodyTooLargeError();
+		chunks.push(buf);
 	}
 	return Buffer.concat(chunks).toString('utf8');
+}
+
+function loopbackHostFor(address) {
+	if (address === '0.0.0.0' || address.startsWith('127.') || address === '::ffff:127.0.0.1') return '127.0.0.1';
+	if (address === '::' || address === '::1') return '[::1]';
+	const plain = address.startsWith('::ffff:') ? address.slice(7) : address;
+	return plain.includes(':') ? `[${plain}]` : plain;
+}
+
+/**
+ * Ask the local Worker (`/api/admin/session`) whether the cookie's session is still
+ * active in KV, so revoked sessions are rejected here too.
+ */
+async function isSessionActiveInWorker(req) {
+	// Call this server directly (never the client-controlled Host header), over loopback when
+	// possible so the HTTPS redirect for non-local hosts doesn't apply.
+	const { localAddress, localPort } = req.socket ?? {};
+	if (!localAddress || !localPort) return false;
+	const bound = req.socket.server?.address?.();
+	const host = loopbackHostFor(bound?.address ?? localAddress);
+	try {
+		const res = await fetch(`http://${host}:${localPort}/api/admin/session`, {
+			headers: { cookie: req.headers.cookie ?? '' },
+		});
+		if (!res.ok) return false;
+		const data = await res.json();
+		return data?.authenticated === true;
+	} catch {
+		return false;
+	}
 }
 
 function sendJson(res, status, data) {
@@ -166,15 +209,13 @@ function normalizeUploads(value) {
 		if (typeof item.filename !== 'string') return `invalid filename: ${String(item.filename)}`;
 		const filename = sanitizeImageFilename(item.filename);
 		if (!filename || !IMAGE_NAME_RE.test(filename)) return `invalid filename: ${item.filename}`;
-		if (typeof item.contentBase64 !== 'string' || !item.contentBase64) {
-			return `missing contentBase64 for ${item.filename}`;
-		}
-		files.push({
-			filename,
-			contentBase64: item.contentBase64.replace(/^data:[^;]+;base64,/, ''),
-		});
+		const checked = validateImageUpload(filename, item.contentBase64);
+		if (!checked.ok) return checked.error;
+		files.push({ filename, contentBase64: checked.contentBase64, size: checked.size });
 	}
-	return files;
+	const batchError = validateUploadBatch(files);
+	if (batchError) return batchError;
+	return files.map(({ filename, contentBase64 }) => ({ filename, contentBase64 }));
 }
 
 function normalizeImgs(value) {
@@ -280,7 +321,10 @@ async function handle(root, req, res) {
 		sendJson(res, 500, { error: 'Missing SESSION_SECRET in .dev.vars' });
 		return true;
 	}
-	if (!isValidSessionToken(secret, readSessionCookie(req.headers.cookie ?? null))) {
+	if (
+		!isValidSessionToken(secret, readSessionCookie(req.headers.cookie ?? null)) ||
+		!(await isSessionActiveInWorker(req))
+	) {
 		sendJson(res, 401, { error: 'Unauthorized' });
 		return true;
 	}
@@ -289,8 +333,12 @@ async function handle(root, req, res) {
 	if (method !== 'DELETE') {
 		try {
 			body = JSON.parse(await readBody(req) || '{}');
-		} catch {
-			sendJson(res, 400, { error: 'Invalid JSON body' });
+		} catch (err) {
+			if (err instanceof BodyTooLargeError) {
+				sendJson(res, 413, { error: 'Request body too large' });
+			} else {
+				sendJson(res, 400, { error: 'Invalid JSON body' });
+			}
 			return true;
 		}
 	}

@@ -84,6 +84,7 @@
 html,
 body {
   font-family: var(--font-body);
+  overflow-x: clip;
 }
 
 h1,
@@ -286,4 +287,18 @@ p {
 
 .exec-card .photo-stack.stack > *:first-child {
   grid-area: 1 / 1 / 4 / 4;
+}
+@media (max-width: 480px) {
+  .mockup-window:before,
+  .mockup-window::before {
+    padding-left: 32px !important;
+    padding-right: 76px !important;
+    background-position: 6px center, 0 0 !important;
+    background-size: auto 14px, 100% 100% !important;
+    font-size: 11px !important;
+  }
+
+  .mockup-window > div {
+    margin: 2px;
+  }
 }

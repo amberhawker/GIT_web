@@ -97,7 +97,7 @@ const sponsors = await getCollection("sponsors");
 				</div>
 
 				<div class="awesome-title">
-					<h1 class="text-5xl sm:text-6xl font-bold tracking-tight text-base-content">Girls in Tech!</h1>
+					<h1 class="text-4xl min-[400px]:text-5xl sm:text-6xl font-bold tracking-tight text-base-content">Girls in Tech!</h1>
 				</div>
 
 				<p class="py-5 text-base sm:text-lg leading-relaxed text-base-content/90 font-body">
@@ -199,9 +199,9 @@ const sponsors = await getCollection("sponsors");
 		</div>
 	</section>
 	<!-- FeaturedEvent component insert -->
-	 <div class="min-h-[50vh] px-4 md:px-8 py-8">
-		<h1 class="text-5xl text-center mt-[2vh] mb-8">Featured Event</h1>
-		<div class="max-w-7xl mx-auto px-4 md:px-8 my-8 flex flex-col gap-8">
+	 <div class="px-4 md:px-8 py-8 md:py-12">
+		<h2 class="text-4xl sm:text-5xl text-center mt-[2vh] mb-6 md:mb-8">Featured Event</h2>
+		<div class="max-w-7xl mx-auto md:px-8 my-6 md:my-8 flex flex-col gap-8">
 			{featured.map((event) => (
 				<Event 
 					eventTitle = {event.data.title}
@@ -212,8 +212,8 @@ const sponsors = await getCollection("sponsors");
 		</div>
 	 </div>
 	 <!-- Sponsor block -->
-	 <div>
-		<h2 class="text-3xl text-center">Thanks to our sponsors!</h2>
+	 <div class="pb-12">
+		<h2 class="text-3xl sm:text-4xl text-center px-4">Thanks to our sponsors!</h2>
 		{sponsors.map((sponsor) => (
 			<Sponsor
 				name = {sponsor.data.name}

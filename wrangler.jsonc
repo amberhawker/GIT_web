@@ -14,6 +14,50 @@
 			"enabled": true,
 		},
 	},
+	// Revocable admin sessions + login-failure counters (src/lib/admin/kv.ts).
+	// No `id`: `wrangler deploy` auto-provisions the namespace. To pin an existing
+	// one, run `npx wrangler kv namespace create ADMIN_KV` and add its "id" here.
+	"kv_namespaces": [
+		{
+			"binding": "ADMIN_KV",
+		},
+	],
+	// Burst limit for POST /api/admin/login per client IP (src/lib/admin/rate-limit.ts).
+	// namespace_id must be a positive integer unique within the Cloudflare account.
+	"ratelimits": [
+		{
+			"name": "ADMIN_LOGIN_RATE_LIMITER",
+			"namespace_id": "1001",
+			"simple": {
+				"limit": 10,
+				"period": 60,
+			},
+		},
+	],
+	// Workers Previews (PR branch builds) don't inherit or auto-provision KV, so they
+	// bind to separate preview-only namespaces and a separate rate-limit namespace.
+	"previews": {
+		"kv_namespaces": [
+			{
+				"binding": "SESSION",
+				"id": "d51c3cb6d12e494e82ab2ece3479121d", // git-web-preview-session
+			},
+			{
+				"binding": "ADMIN_KV",
+				"id": "36e9d37a9c724facab0077fcde3a8d64", // git-web-preview-admin
+			},
+		],
+		"ratelimits": [
+			{
+				"name": "ADMIN_LOGIN_RATE_LIMITER",
+				"namespace_id": "1002",
+				"simple": {
+					"limit": 10,
+					"period": 60,
+				},
+			},
+		],
+	},
 	// Non-secret defaults (override in dashboard if needed).
 	// Secrets go in .dev.vars locally / `wrangler secret put` in production:
 	// ADMIN_PASSWORD, SESSION_SECRET, GITHUB_TOKEN
