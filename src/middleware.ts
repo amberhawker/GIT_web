@@ -29,11 +29,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (isAdminApi && BODY_METHODS.has(request.method)) {
 		const header = request.headers.get('content-length');
-		if (header === null) {
+		if (header === null && request.body !== null) {
 			return finish(Response.json({ error: 'Content-Length required' }, { status: 411 }));
 		}
 		const limit = pathname === '/api/admin/login' ? MAX_LOGIN_REQUEST_BYTES : MAX_ADMIN_REQUEST_BYTES;
-		if (Number(header) > limit) {
+		if (Number(header ?? 0) > limit) {
 			return finish(Response.json({ error: 'Request body too large' }, { status: 413 }));
 		}
 	}
