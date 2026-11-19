@@ -92,6 +92,9 @@ export function validateImageUpload(filename, rawContent) {
 	const expectedMime = mimeForImageFilename(filename);
 	if (!expectedMime) return { ok: false, error: `Unsupported image type: ${filename}` };
 
+	if (typeof rawContent !== 'string' || !rawContent) {
+		return { ok: false, error: `missing contentBase64 for ${filename}` };
+	}
 	let content = rawContent;
 	const dataUrl = content.match(DATA_URL_RE);
 	if (dataUrl) {
