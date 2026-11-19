@@ -260,15 +260,21 @@ const authed = Astro.locals.adminAuthed;
 		window.location.reload();
 	});
 
-	logoutBtn?.addEventListener('click', async () => {
-		await fetch('/api/admin/logout', { method: 'POST' });
+	const logout = async (url: string) => {
+		const res = await fetch(url, { method: 'POST' }).catch(() => null);
+		if (!res?.ok) {
+			const body = (await res?.json().catch(() => ({}))) as { error?: string } | undefined;
+			alert(`Logout failed: ${body?.error ?? 'network error'}. Sessions may still be active.`);
+			return;
+		}
 		window.location.reload();
-	});
+	};
 
-	document.getElementById('logout-all-btn')?.addEventListener('click', async () => {
+	logoutBtn?.addEventListener('click', () => logout('/api/admin/logout'));
+
+	document.getElementById('logout-all-btn')?.addEventListener('click', () => {
 		if (!confirm('Log out every admin session on all devices?')) return;
-		await fetch('/api/admin/logout?all=1', { method: 'POST' });
-		window.location.reload();
+		logout('/api/admin/logout?all=1');
 	});
 
 	const root = document.getElementById('admin-dashboard');
