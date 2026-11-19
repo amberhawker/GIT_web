@@ -94,16 +94,24 @@ async function readBody(req) {
 	return Buffer.concat(chunks).toString('utf8');
 }
 
+function loopbackHostFor(address) {
+	if (address === '0.0.0.0' || address.startsWith('127.') || address === '::ffff:127.0.0.1') return '127.0.0.1';
+	if (address === '::' || address === '::1') return '[::1]';
+	const plain = address.startsWith('::ffff:') ? address.slice(7) : address;
+	return plain.includes(':') ? `[${plain}]` : plain;
+}
+
 /**
  * Ask the local Worker (`/api/admin/session`) whether the cookie's session is still
  * active in KV, so revoked sessions are rejected here too.
  */
 async function isSessionActiveInWorker(req) {
-	// Use the socket this server accepted the request on, never the client-controlled Host header.
+	// Call this server directly (never the client-controlled Host header), over loopback when
+	// possible so the HTTPS redirect for non-local hosts doesn't apply.
 	const { localAddress, localPort } = req.socket ?? {};
 	if (!localAddress || !localPort) return false;
-	const address = localAddress.startsWith('::ffff:') ? localAddress.slice(7) : localAddress;
-	const host = address.includes(':') ? `[${address}]` : address;
+	const bound = req.socket.server?.address?.();
+	const host = loopbackHostFor(bound?.address ?? localAddress);
 	try {
 		const res = await fetch(`http://${host}:${localPort}/api/admin/session`, {
 			headers: { cookie: req.headers.cookie ?? '' },
