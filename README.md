@@ -28,6 +28,8 @@ Set locally in `.dev.vars` (copy `.dev.vars.example`) and in production with `np
 | `ADMIN_LOGIN_RATE_LIMITER` | Workers Rate Limiting | Burst cap of 10 login requests / 60 s per IP |
 | `SESSION` | KV namespace | Added automatically by the Astro Cloudflare adapter (Astro sessions) |
 
+PR preview builds (Workers Previews) don't inherit or auto-provision KV, so `wrangler.jsonc` → `previews` binds `SESSION` and `ADMIN_KV` to preview-only namespaces (`git-web-preview-session`, `git-web-preview-admin`) and the rate limiter to `namespace_id` `1002`. Preview secrets (`ADMIN_PASSWORD`, `SESSION_SECRET`, `GITHUB_TOKEN`) are set separately with `npx wrangler preview base-config secret put <NAME>`.
+
 `ADMIN_KV` has no `id`, so `wrangler deploy` provisions it automatically. To use a namespace you create yourself: `npx wrangler kv namespace create ADMIN_KV` and paste the returned `id` into `wrangler.jsonc`. Run `npm run cf-typegen` after changing bindings. `npm run dev` uses local KV automatically.
 
 ### How admin security works
