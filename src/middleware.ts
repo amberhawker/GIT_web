@@ -4,7 +4,9 @@ import { MAX_ADMIN_REQUEST_BYTES } from './lib/admin/upload-rules.mjs';
 import { httpsRedirect, withSecurityHeaders } from './lib/security';
 
 const BODY_METHODS = new Set(['POST', 'PUT', 'PATCH']);
-const MAX_LOGIN_REQUEST_BYTES = 4 * 1024;
+/** Login and logout bodies are tiny and reachable without a session. */
+const MAX_AUTH_REQUEST_BYTES = 4 * 1024;
+const AUTH_PATHS = new Set(['/api/admin/login', '/api/admin/logout']);
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	if (context.isPrerendered) return next();
@@ -32,7 +34,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		if (header === null && request.body !== null) {
 			return finish(Response.json({ error: 'Content-Length required' }, { status: 411 }));
 		}
-		const limit = pathname === '/api/admin/login' ? MAX_LOGIN_REQUEST_BYTES : MAX_ADMIN_REQUEST_BYTES;
+		const limit = AUTH_PATHS.has(pathname) ? MAX_AUTH_REQUEST_BYTES : MAX_ADMIN_REQUEST_BYTES;
 		if (Number(header ?? 0) > limit) {
 			return finish(Response.json({ error: 'Request body too large' }, { status: 413 }));
 		}
