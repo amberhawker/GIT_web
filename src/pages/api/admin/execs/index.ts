@@ -9,11 +9,19 @@ import {
 	jsonResponse,
 	normalizeExec,
 	normalizeUploads,
+	EXECS_ASSETS,
+	addUploadedImages,
+	nameUploads,
 	prettyJson,
 } from '../../../../lib/admin/content';
 import { getRepoTextFile, listRepoDirectory } from '../../../../lib/admin/github';
 import { listLocalExecs } from '../../../../lib/admin/local';
-import { getAdminTextFile, persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
+import {
+	getAdminTextFile,
+	listAdminAssetNames,
+	persistAdminChanges,
+	persistErrorResponse,
+} from '../../../../lib/admin/persist';
 
 export const GET: APIRoute = async () => {
 	try {
@@ -59,6 +67,9 @@ export const POST: APIRoute = async ({ request }) => {
 	try {
 		const existing = await getAdminTextFile(jsonPath);
 		if (existing) return errorResponse(`Exec already exists: ${id}`, 409);
+
+		nameUploads(files, await listAdminAssetNames(EXECS_ASSETS));
+		addUploadedImages('execs', data, files);
 
 		const result = await persistAdminChanges(`admin: create exec ${id}`, [
 			{ path: jsonPath, content: prettyJson(data) },

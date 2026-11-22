@@ -17,9 +17,19 @@ const authed = Astro.locals.adminAuthed;
 			</div>
 			{
 				authed && (
-					<button id="logout-btn" class="btn btn-outline btn-sm font-mono" type="button">
-						Log out
-					</button>
+					<div class="flex flex-wrap gap-2">
+						<button id="logout-btn" class="btn btn-outline btn-sm font-mono" type="button">
+							Log out
+						</button>
+						<button
+							id="logout-all-btn"
+							class="btn btn-ghost btn-sm font-mono"
+							type="button"
+							title="Revoke every active admin session (all devices)"
+						>
+							Log out everywhere
+						</button>
+					</div>
 				)
 			}
 		</header>
@@ -102,8 +112,8 @@ const authed = Astro.locals.adminAuthed;
 								></textarea>
 							</label>
 							<label class="admin-field admin-field-full">
-								<span class="admin-label">upload images (optional)</span>
-								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+								<span class="admin-label">upload images (optional; added to the images list on save)</span>
+								<input name="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="admin-file" />
 							</label>
 							<div
 								id="events-progress"
@@ -167,8 +177,8 @@ const authed = Astro.locals.adminAuthed;
 								<textarea name="imgs" class="admin-textarea font-mono text-sm"></textarea>
 							</label>
 							<label class="admin-field admin-field-full">
-								<span class="admin-label">upload images (optional)</span>
-								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+								<span class="admin-label">upload images (optional; added to the images list on save)</span>
+								<input name="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="admin-file" />
 							</label>
 							<div
 								id="execs-progress"
@@ -195,7 +205,7 @@ const authed = Astro.locals.adminAuthed;
 						<form id="gallery-form" class="admin-form admin-form-upload">
 							<label class="admin-field">
 								<span class="admin-label">upload images</span>
-								<input name="files" type="file" accept="image/*" multiple class="admin-file" />
+								<input name="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="admin-file" />
 							</label>
 							<button class="btn btn-primary btn-tactile text-white font-mono font-bold" type="submit">
 								Upload
@@ -232,27 +242,52 @@ const authed = Astro.locals.adminAuthed;
 		loginError?.classList.add('hidden');
 		if (loginError) loginError.textContent = '';
 
+		const submitBtn = loginForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+		if (submitBtn?.disabled) return;
+		if (submitBtn) submitBtn.disabled = true;
+
+		const showError = (message: string) => {
+			if (submitBtn) submitBtn.disabled = false;
+			if (!loginError) return;
+			loginError.textContent = message;
+			loginError.classList.remove('hidden');
+		};
+
 		const password = String(new FormData(loginForm).get('password') ?? '');
 		const res = await fetch('/api/admin/login', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ password }),
-		});
+		}).catch(() => null);
 
+		if (!res) return showError('Network error. Check your connection and try again.');
 		if (!res.ok) {
 			const body = (await res.json().catch(() => ({}))) as { error?: string };
-			if (loginError) {
-				loginError.textContent = body.error ?? 'Login failed';
-				loginError.classList.remove('hidden');
-			}
-			return;
+			return showError(body.error ?? 'Login failed');
 		}
 		window.location.reload();
 	});
 
-	logoutBtn?.addEventListener('click', async () => {
-		await fetch('/api/admin/logout', { method: 'POST' });
+	const logout = async (url: string) => {
+		const res = await fetch(url, { method: 'POST' }).catch(() => null);
+		// 401: this session already ended (e.g. "Log out everywhere" on another device).
+		if (res?.status === 401) {
+			window.location.reload();
+			return;
+		}
+		if (!res?.ok) {
+			const body = (await res?.json().catch(() => ({}))) as { error?: string } | undefined;
+			alert(`Logout failed: ${body?.error ?? 'network error'}. Sessions may still be active.`);
+			return;
+		}
 		window.location.reload();
+	};
+
+	logoutBtn?.addEventListener('click', () => logout('/api/admin/logout'));
+
+	document.getElementById('logout-all-btn')?.addEventListener('click', () => {
+		if (!confirm('Log out every admin session on all devices?')) return;
+		logout('/api/admin/logout?all=1');
 	});
 
 	const root = document.getElementById('admin-dashboard');

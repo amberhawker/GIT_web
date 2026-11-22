@@ -7,10 +7,18 @@ const modules = import.meta.glob<{ default: ImageMetadata }>(
 	{ eager: true }
 );
 
+// Exact `/assets/<folder>/<file>` first, so same-named images in different folders stay distinct.
+const byPath = new Map<string, ImageMetadata>();
 const byFilename = new Map<string, ImageMetadata>();
 for (const [path, mod] of Object.entries(modules)) {
+	byPath.set(path.replace(/^\/src/, ''), mod.default);
 	const filename = path.split('/').pop();
 	if (filename) byFilename.set(filename, mod.default);
+}
+
+function lookup(pathOrFilename: string): ImageMetadata | undefined {
+	const filename = pathOrFilename.split('/').pop() ?? pathOrFilename;
+	return byPath.get(pathOrFilename) ?? byFilename.get(filename);
 }
 
 const fallbackModules = import.meta.glob<{ default: ImageMetadata }>(
@@ -25,10 +33,9 @@ for (const [path, mod] of Object.entries(fallbackModules)) {
 }
 
 export function resolveAssetImage(pathOrFilename: string): ImageMetadata {
-	const filename = pathOrFilename.split('/').pop() ?? pathOrFilename;
-	const image = byFilename.get(filename);
+	const image = lookup(pathOrFilename);
 	if (!image) {
-		throw new Error(`Unknown image asset: ${pathOrFilename} (looked up as ${filename})`);
+		throw new Error(`Unknown image asset: ${pathOrFilename}`);
 	}
 	return image;
 }
@@ -37,6 +44,5 @@ export function resolveAssetImageOptional(
 	pathOrFilename: string | undefined | null
 ): ImageMetadata | undefined {
 	if (!pathOrFilename) return undefined;
-	const filename = pathOrFilename.split('/').pop() ?? pathOrFilename;
-	return byFilename.get(filename);
+	return lookup(pathOrFilename);
 }

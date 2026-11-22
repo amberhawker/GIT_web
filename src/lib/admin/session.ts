@@ -56,34 +56,84 @@ export function sessionCookieName(): string {
 	return COOKIE_NAME;
 }
 
-export async function createSessionToken(sessionSecret: string): Promise<string> {
-	const exp = Math.floor(Date.now() / 1000) + MAX_AGE_SECONDS;
-	const payload = toBase64Url(new TextEncoder().encode(JSON.stringify({ exp })));
+const SESSION_KEY_PREFIX = 'admin-session:';
+
+type SessionPayload = { sid: string; exp: number };
+
+function sessionKey(sid: string): string {
+	return `${SESSION_KEY_PREFIX}${sid}`;
+}
+
+function newSessionId(): string {
+	return toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+}
+
+/** Verify signature + expiry only; does not check whether the session was revoked. */
+async function parseSessionToken(
+	sessionSecret: string,
+	token: string | undefined
+): Promise<SessionPayload | null> {
+	if (!token) return null;
+	const parts = token.split('.');
+	if (parts.length !== 2) return null;
+	const [payload, signature] = parts;
+	if (!payload || !signature) return null;
+
+	try {
+		if (!(await verify(sessionSecret, payload, signature))) return null;
+		const data = JSON.parse(new TextDecoder().decode(fromBase64Url(payload))) as Partial<SessionPayload>;
+		if (typeof data.sid !== 'string' || !data.sid) return null;
+		if (typeof data.exp !== 'number' || data.exp <= Math.floor(Date.now() / 1000)) return null;
+		return { sid: data.sid, exp: data.exp };
+	} catch {
+		return null;
+	}
+}
+
+/** Create a signed session token and record it as active in KV. */
+export async function createSessionToken(sessionSecret: string, kv: KVNamespace): Promise<string> {
+	const now = Math.floor(Date.now() / 1000);
+	const session: SessionPayload = { sid: newSessionId(), exp: now + MAX_AGE_SECONDS };
+	await kv.put(sessionKey(session.sid), JSON.stringify({ createdAt: now, exp: session.exp }), {
+		expirationTtl: MAX_AGE_SECONDS,
+	});
+	const payload = toBase64Url(new TextEncoder().encode(JSON.stringify(session)));
 	const signature = await sign(sessionSecret, payload);
 	return `${payload}.${signature}`;
 }
 
+/** Valid = correctly signed, unexpired, and still present (not revoked) in KV. */
 export async function isValidSessionToken(
 	sessionSecret: string,
+	kv: KVNamespace,
 	token: string | undefined
 ): Promise<boolean> {
-	if (!token) return false;
-	const parts = token.split('.');
-	if (parts.length !== 2) return false;
-	const [payload, signature] = parts;
-	if (!payload || !signature) return false;
+	const session = await parseSessionToken(sessionSecret, token);
+	if (!session) return false;
+	return (await kv.get(sessionKey(session.sid))) !== null;
+}
 
-	const ok = await verify(sessionSecret, payload, signature);
-	if (!ok) return false;
+/** Revoke one session server-side (logout). */
+export async function revokeSessionToken(
+	sessionSecret: string,
+	kv: KVNamespace,
+	token: string | undefined
+): Promise<void> {
+	const session = await parseSessionToken(sessionSecret, token);
+	if (session) await kv.delete(sessionKey(session.sid));
+}
 
-	try {
-		const json = new TextDecoder().decode(fromBase64Url(payload));
-		const data = JSON.parse(json) as { exp?: number };
-		if (typeof data.exp !== 'number') return false;
-		return data.exp > Math.floor(Date.now() / 1000);
-	} catch {
-		return false;
-	}
+/** Revoke every active admin session (e.g. after the shared password leaks). */
+export async function revokeAllSessions(kv: KVNamespace): Promise<number> {
+	let revoked = 0;
+	let cursor: string | undefined;
+	do {
+		const page = await kv.list({ prefix: SESSION_KEY_PREFIX, cursor });
+		await Promise.all(page.keys.map((key) => kv.delete(key.name)));
+		revoked += page.keys.length;
+		cursor = page.list_complete ? undefined : page.cursor;
+	} while (cursor);
+	return revoked;
 }
 
 export function buildSessionCookie(token: string, secure: boolean): string {

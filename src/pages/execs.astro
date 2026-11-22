@@ -10,9 +10,9 @@ const allExecs = await getCollection("execs");
 
 <Layout title="Team">
     <div class="mt-[2vh]">
-        <h1 class="text-5xl font-bold text-center">The 2026-'27 Executives:</h1>
+        <h1 class="text-4xl sm:text-5xl font-bold text-center px-4 text-balance">The <span class="whitespace-nowrap">2026-'27</span> Executives:</h1>
     </div>
-    <div class="w-full px-4 sm:px-8 lg:px-12 my-8 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6 items-stretch">
+    <div class="exec-grid w-full px-4 sm:px-8 lg:px-12 my-8 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5 sm:gap-6 items-stretch">
         {allExecs.map((exec) => (
             <Exec
                 role={exec.data.role}
@@ -27,14 +27,32 @@ const allExecs = await getCollection("execs");
 </Layout>
 
 <script>
-    import { createDraggable } from 'animejs';
+    import { createDraggable, type Draggable } from 'animejs';
+
+    // Dragging is a desktop easter egg. On touch screens it hijacks scrolling and
+    // flings cards off-screen, widening the page, so only enable it for mouse users.
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const draggables = new Map<HTMLElement, Draggable>();
+
+    const syncDraggables = () => {
+        document.querySelectorAll<HTMLElement>('.exec-card').forEach((card) => {
+            const existing = draggables.get(card);
+            if (finePointer.matches && !existing) {
+                const grid = card.closest<HTMLElement>('.exec-grid') ?? document.body;
+                draggables.set(card, createDraggable(card, { container: grid }));
+            } else if (!finePointer.matches && existing) {
+                existing.revert();
+                draggables.delete(card);
+            }
+        });
+    };
+    finePointer.addEventListener('change', syncDraggables);
 
     const setupExecCards = () => {
+        syncDraggables();
         document.querySelectorAll<HTMLElement>('.exec-card').forEach((card) => {
             if (card.dataset.stackInit) return;
             card.dataset.stackInit = 'true';
-
-            createDraggable(card);
 
             const stack = card.querySelector('.photo-stack');
             const nextBtn = card.querySelector('.next-btn');

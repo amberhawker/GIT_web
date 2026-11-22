@@ -1,3 +1,14 @@
+import {
+	ALLOWED_IMAGE_MIME_TYPES,
+	MAX_UPLOAD_FILES,
+	MAX_UPLOAD_FILE_BYTES,
+	MAX_UPLOAD_TOTAL_BYTES,
+	formatBytes,
+	mimeForImageFilename,
+	sanitizeImageFilename,
+	uniqueImageFilename,
+} from '../../lib/admin/upload-rules.mjs';
+
 type ImgRef = { path: string; alt?: string };
 
 type EventData = {
@@ -21,6 +32,20 @@ type CommitInfo = { sha?: string; htmlUrl?: string; message?: string; source?: '
 type ListItem = { id: string; title: string; meta?: string };
 type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 type ApiInit = RequestInit & { onUploadProgress?: (percent: number) => void };
+
+const SESSION_ENDED = 'Your admin session has ended. Reload the page and log in again.';
+let sessionEndedPrompted = false;
+
+function failure(status: number, error: string | undefined): { ok: false; error: string } {
+	if (status !== 401) return { ok: false, error: error ?? `Request failed (${status})` };
+	if (!sessionEndedPrompted) {
+		sessionEndedPrompted = true;
+		if (confirm('Your admin session has ended. Reload to log in again? Unsaved changes will be lost.')) {
+			window.location.reload();
+		}
+	}
+	return { ok: false, error: SESSION_ENDED };
+}
 
 async function api<T>(path: string, init?: ApiInit): Promise<ApiResult<T>> {
 	const { onUploadProgress, ...rest } = init ?? {};
@@ -46,7 +71,7 @@ async function api<T>(path: string, init?: ApiInit): Promise<ApiResult<T>> {
 					body = {} as T & { error?: string };
 				}
 				if (xhr.status < 200 || xhr.status >= 300) {
-					resolve({ ok: false, error: body.error ?? `Request failed (${xhr.status})` });
+					resolve(failure(xhr.status, body.error));
 					return;
 				}
 				onUploadProgress(100);
@@ -59,7 +84,7 @@ async function api<T>(path: string, init?: ApiInit): Promise<ApiResult<T>> {
 
 	const res = await fetch(path, { ...rest, headers });
 	const body = (await res.json().catch(() => ({}))) as T & { error?: string };
-	if (!res.ok) return { ok: false, error: body.error ?? `Request failed (${res.status})` };
+	if (!res.ok) return failure(res.status, body.error);
 	return { ok: true, data: body as T };
 }
 
@@ -75,12 +100,63 @@ function fileToBase64(file: File): Promise<string> {
 	});
 }
 
-async function collectUploads(input: HTMLInputElement) {
+/** Per-file checks mirroring the server rules, so bad files fail before upload. */
+function checkUploadFiles(files: File[]): string | null {
+	for (const file of files) {
+		const mime = mimeForImageFilename(file.name);
+		if (!mime || (file.type && !ALLOWED_IMAGE_MIME_TYPES.includes(file.type))) {
+			return `${file.name} isn't a supported image. Use PNG, JPEG, WebP, or GIF.`;
+		}
+		if (file.size > MAX_UPLOAD_FILE_BYTES) {
+			return `${file.name} is ${formatBytes(file.size)}; the limit is ${formatBytes(MAX_UPLOAD_FILE_BYTES)} per image.`;
+		}
+	}
+	return null;
+}
+
+/** Per-file checks plus the per-save count and total-size limits. */
+function checkUploadBatch(input: HTMLInputElement): string | null {
+	const files = Array.from(input.files ?? []);
+	const fileError = checkUploadFiles(files);
+	if (fileError) return fileError;
+	if (files.length > MAX_UPLOAD_FILES) {
+		return `Choose at most ${MAX_UPLOAD_FILES} images per save, then add the rest in another save.`;
+	}
+	const total = files.reduce((sum, file) => sum + file.size, 0);
+	if (total > MAX_UPLOAD_TOTAL_BYTES) {
+		return `Selected images total ${formatBytes(total)}; the limit is ${formatBytes(MAX_UPLOAD_TOTAL_BYTES)} per save. Save fewer images, then add the rest in another save.`;
+	}
+	return null;
+}
+
+/** Split files into groups that each fit the per-request count and size limits. */
+function uploadBatches(files: File[]): File[][] {
+	const batches: File[][] = [];
+	let current: File[] = [];
+	let currentBytes = 0;
+	for (const file of files) {
+		if (current.length >= MAX_UPLOAD_FILES || currentBytes + file.size > MAX_UPLOAD_TOTAL_BYTES) {
+			batches.push(current);
+			current = [];
+			currentBytes = 0;
+		}
+		current.push(file);
+		currentBytes += file.size;
+	}
+	if (current.length) batches.push(current);
+	return batches;
+}
+
+async function encodeUploads(list: File[], names?: Map<File, string>) {
 	const files = [];
-	for (const file of Array.from(input.files ?? [])) {
-		files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
+	for (const file of list) {
+		files.push({ filename: names?.get(file) ?? file.name, contentBase64: await fileToBase64(file) });
 	}
 	return files;
+}
+
+function collectUploads(input: HTMLInputElement) {
+	return encodeUploads(Array.from(input.files ?? []));
 }
 
 function setStatus(el: HTMLElement | null, message: string, kind: 'info' | 'ok' | 'err' = 'info') {
@@ -291,6 +367,8 @@ async function initEvents(root: HTMLElement) {
 			featured: featuredInput.checked,
 			imgs,
 		};
+		const uploadError = checkUploadBatch(filesInput);
+		if (uploadError) return setStatus(status, uploadError, 'err');
 		const files = await collectUploads(filesInput);
 		const isNew = !selectedId;
 		const trackUpload = files.length > 0;
@@ -442,6 +520,8 @@ async function initExecs(root: HTMLElement) {
 			img: imgInput.value.trim() || '/assets/execs/placeholder.jpg',
 			imgs,
 		};
+		const uploadError = checkUploadBatch(filesInput);
+		if (uploadError) return setStatus(status, uploadError, 'err');
 		const files = await collectUploads(filesInput);
 		const isNew = !selectedId;
 		const trackUpload = files.length > 0;
@@ -490,11 +570,13 @@ async function initGallery(root: HTMLElement) {
 	const status = qs<HTMLElement>(root, '#gallery-status');
 	const progress = root.querySelector('#gallery-progress') as HTMLElement | null;
 	const filesInput = qs<HTMLInputElement>(form, '[name="files"]');
+	let galleryNames: string[] = [];
 
 	async function refresh() {
 		setStatus(status, 'Loading gallery…');
 		const res = await api<{ images: { name: string }[] }>('/api/admin/gallery');
 		if (!res.ok) return setStatus(status, res.error, 'err');
+		galleryNames = res.data.images.map((image) => image.name);
 
 		grid.replaceChildren(
 			...res.data.images.map((image) => {
@@ -539,27 +621,43 @@ async function initGallery(root: HTMLElement) {
 
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
-		const files = await collectUploads(filesInput);
-		if (files.length === 0) return setStatus(status, 'Choose at least one image', 'err');
+		const selected = Array.from(filesInput.files ?? []);
+		if (selected.length === 0) return setStatus(status, 'Choose at least one image', 'err');
+		const uploadError = checkUploadFiles(selected);
+		if (uploadError) return setStatus(status, uploadError, 'err');
 
-		setStatus(status, 'Uploading… 0%');
+		// Number duplicate names (photo.jpg → photo-1.jpg) so later batches can't replace earlier ones.
+		const taken = new Set(galleryNames.map((name) => name.toLowerCase()));
+		const names = new Map(selected.map((file) => [file, uniqueImageFilename(sanitizeImageFilename(file.name), taken)]));
+		const batches = uploadBatches(selected);
+		const label = (i: number, percent: number) =>
+			batches.length > 1 ? `Uploading part ${i + 1} of ${batches.length}… ${percent}%` : `Uploading… ${percent}%`;
+		let last: { commit?: CommitInfo; source?: 'github' | 'local' } | undefined;
+
+		setStatus(status, label(0, 0));
 		setProgress(progress, 0);
-		const res = await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>('/api/admin/gallery', {
-			method: 'POST',
-			body: JSON.stringify({ files }),
-			onUploadProgress: (percent) => {
-				setProgress(progress, percent);
-				setStatus(status, `Uploading… ${percent}%`);
-			},
-		});
-		if (!res.ok) {
-			setProgress(progress, null);
-			return setStatus(status, res.error, 'err');
+		for (const [i, batch] of batches.entries()) {
+			const files = await encodeUploads(batch, names);
+			const res = await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>('/api/admin/gallery', {
+				method: 'POST',
+				body: JSON.stringify({ files }),
+				onUploadProgress: (percent) => {
+					setProgress(progress, Math.round(((i + percent / 100) / batches.length) * 100));
+					setStatus(status, label(i, percent));
+				},
+			});
+			if (!res.ok) {
+				setProgress(progress, null);
+				const done = batches.slice(0, i).reduce((sum, b) => sum + b.length, 0);
+				if (done > 0) await refresh();
+				return setStatus(status, done > 0 ? `${done} of ${selected.length} images saved. ${res.error}` : res.error, 'err');
+			}
+			last = res.data;
 		}
 		filesInput.value = '';
 		setProgress(progress, 100);
-		setStatus(status, commitNote(res.data.commit, res.data.source), 'ok');
 		await refresh();
+		setStatus(status, commitNote(last?.commit, last?.source), 'ok');
 		setProgress(progress, null);
 	});
 
