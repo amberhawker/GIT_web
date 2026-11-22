@@ -6,6 +6,7 @@ import {
 	formatBytes,
 	mimeForImageFilename,
 } from '../../lib/admin/upload-rules.mjs';
+import { sanitizeImageFilename } from '../../lib/admin/content';
 
 type ImgRef = { path: string; alt?: string };
 
@@ -100,7 +101,14 @@ function fileToBase64(file: File): Promise<string> {
 
 /** Per-file checks mirroring the server rules, so bad files fail before upload. */
 function checkUploadFiles(files: File[]): string | null {
+	const savedNames = new Map<string, string>();
 	for (const file of files) {
+		const saved = sanitizeImageFilename(file.name);
+		const clash = savedNames.get(saved);
+		if (saved && clash) {
+			return `${clash} and ${file.name} would both be saved as ${saved}. Rename one and try again.`;
+		}
+		savedNames.set(saved, file.name);
 		const mime = mimeForImageFilename(file.name);
 		if (!mime || (file.type && !ALLOWED_IMAGE_MIME_TYPES.includes(file.type))) {
 			return `${file.name} isn't a supported image. Use PNG, JPEG, WebP, or GIF.`;
