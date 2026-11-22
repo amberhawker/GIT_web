@@ -1,7 +1,8 @@
-import { commitFiles, getRepoTextFile, GitHubError, type CommitResult, type FileChange } from './github';
+import { commitFiles, getRepoTextFile, GitHubError, listRepoDirectory, type CommitResult, type FileChange } from './github';
 import {
 	applyLocalFileChanges,
 	isLocalAdminWriteEnabled,
+	listLocalDirectory,
 	readLocalTextFile,
 } from './local';
 
@@ -44,6 +45,17 @@ export async function getAdminTextFile(
 
 	const local = await readLocalTextFile(path);
 	return local ? { ...local, source: 'local' } : null;
+}
+
+/** File names in a repo folder, from GitHub or (in DEV) from disk. */
+export async function listAdminAssetNames(dir: string): Promise<string[]> {
+	try {
+		return (await listRepoDirectory(dir)).filter((entry) => entry.type === 'file').map((entry) => entry.name);
+	} catch (err) {
+		if (!isLocalAdminWriteEnabled()) throw err;
+		console.warn('admin: GitHub list failed, using local files', err);
+		return listLocalDirectory(dir);
+	}
 }
 
 export function persistErrorResponse(err: unknown, fallback: string): Response {

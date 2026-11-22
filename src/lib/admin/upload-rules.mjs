@@ -1,5 +1,5 @@
 /**
- * Server-side image upload rules shared by the Worker API routes and the
+ * Image upload rules and naming shared by the Worker API routes and the
  * `astro dev` local-write middleware (scripts/admin-local-write.mjs).
  * Plain JS so Node can import it without a TypeScript loader.
  */
@@ -152,4 +152,96 @@ export function validateUploadBatch(files) {
 		return `Uploads total ${formatBytes(total)}; max ${formatBytes(MAX_UPLOAD_TOTAL_BYTES)} per save`;
 	}
 	return null;
+}
+
+/** `&` allowed for legacy assets like meet&greet.png */
+const IMAGE_NAME_RE = /^[a-z0-9][a-z0-9._&-]*\.(png|jpe?g|webp|gif)$/i;
+
+export const EXEC_PLACEHOLDER = '/assets/execs/placeholder.jpg';
+
+/** @param {string} name */
+export function isValidImageFilename(name) {
+	return IMAGE_NAME_RE.test(name) && !name.includes('..') && !name.includes('/');
+}
+
+/**
+ * `LWScreenShot 2026-11-10 at 2.35.00 PM.png` → `lwscreenshot-2026-11-10-at-2-35-00-pm.png`
+ * @param {string} name
+ */
+export function sanitizeImageFilename(name) {
+	const base = name.split(/[/\\]/).pop()?.trim() ?? '';
+	const m = base.match(/^(.*)\.(png|jpe?g|webp|gif)$/i);
+	if (!m) return '';
+	const stem = m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+	const ext = m[2].toLowerCase() === 'jpeg' ? 'jpg' : m[2].toLowerCase();
+	return `${stem || 'image'}.${ext}`;
+}
+
+/**
+ * Returns `name`, or `name-1`, `name-2`, … if taken; records the result in `taken` (lowercase).
+ * @param {string} name
+ * @param {Set<string>} taken
+ */
+export function uniqueImageFilename(name, taken) {
+	const dot = name.lastIndexOf('.');
+	const stem = name.slice(0, dot);
+	const ext = name.slice(dot);
+	let candidate = name;
+	for (let n = 1; taken.has(candidate.toLowerCase()); n++) candidate = `${stem}-${n}${ext}`;
+	taken.add(candidate.toLowerCase());
+	return candidate;
+}
+
+/** @typedef {{ filename: string; contentBase64: string }} UploadedFile */
+
+/**
+ * Validates an API `files` array; returns sanitized uploads or an error message.
+ * @param {unknown} value
+ * @returns {UploadedFile[] | string}
+ */
+export function normalizeUploads(value) {
+	if (value === undefined || value === null) return [];
+	if (!Array.isArray(value)) return 'files must be an array';
+	const files = [];
+	for (const item of value) {
+		if (!item || typeof item !== 'object') return 'invalid files entry';
+		if (typeof item.filename !== 'string') return `invalid filename: ${String(item.filename)}`;
+		const filename = sanitizeImageFilename(item.filename);
+		if (!filename || !isValidImageFilename(filename)) return `invalid filename: ${item.filename}`;
+		const checked = validateImageUpload(filename, item.contentBase64);
+		if (!checked.ok) return checked.error;
+		files.push({ filename, contentBase64: checked.contentBase64, size: checked.size });
+	}
+	const batchError = validateUploadBatch(files);
+	if (batchError) return batchError;
+	return files.map(({ filename, contentBase64 }) => ({ filename, contentBase64 }));
+}
+
+/**
+ * Gives uploads unused names (`photo.jpg` → `photo-1.jpg`) so they never replace existing files.
+ * @param {UploadedFile[]} files
+ * @param {string[]} existingNames
+ */
+export function nameUploads(files, existingNames) {
+	const taken = new Set(existingNames.map((name) => name.toLowerCase()));
+	for (const file of files) file.filename = uniqueImageFilename(file.filename, taken);
+}
+
+/**
+ * Adds uploaded images to the entry's image list; typed paths are kept as written.
+ * @param {'events' | 'execs'} folder
+ * @param {{ img?: string; imgs?: { path: string; alt?: string }[] }} data
+ * @param {UploadedFile[]} files
+ */
+export function addUploadedImages(folder, data, files) {
+	if (files.length === 0) return;
+	const paths = files.map((file) => `/assets/${folder}/${file.filename}`);
+	let imgs = data.imgs ?? [];
+	// Exec cards show `imgs` instead of `img` when it's non-empty, so keep the current photo in the stack.
+	if (folder === 'execs' && imgs.length === 0 && data.img && data.img !== EXEC_PLACEHOLDER) {
+		imgs = [{ path: data.img }];
+	}
+	const listed = new Set(imgs.map((img) => img.path));
+	data.imgs = [...imgs, ...paths.filter((path) => !listed.has(path)).map((path) => ({ path }))];
+	if (folder === 'execs' && (!data.img || data.img === EXEC_PLACEHOLDER)) data.img = paths[0];
 }

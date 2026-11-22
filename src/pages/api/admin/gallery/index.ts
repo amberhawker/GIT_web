@@ -7,12 +7,12 @@ import {
 	fileChangesForUploads,
 	jsonResponse,
 	normalizeUploads,
+	nameUploads,
 	publicAssetPath,
-	uniqueImageFilename,
 } from '../../../../lib/admin/content';
 import { listRepoDirectory } from '../../../../lib/admin/github';
 import { listLocalGallery } from '../../../../lib/admin/local';
-import { persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
+import { listAdminAssetNames, persistAdminChanges, persistErrorResponse } from '../../../../lib/admin/persist';
 
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif)$/i;
 
@@ -57,9 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
 	if (files.length === 0) return errorResponse('No files to upload');
 
 	try {
-		const existing = await listRepoDirectory(GALLERY_ASSETS);
-		const taken = new Set(existing.map((entry) => entry.name.toLowerCase()));
-		for (const file of files) file.filename = uniqueImageFilename(file.filename, taken);
+		nameUploads(files, await listAdminAssetNames(GALLERY_ASSETS));
 
 		const result = await persistAdminChanges(
 			files.length === 1

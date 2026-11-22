@@ -7,9 +7,12 @@ import { readFileSync } from 'node:fs';
 import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import {
+	EXEC_PLACEHOLDER,
 	MAX_ADMIN_REQUEST_BYTES,
-	validateImageUpload,
-	validateUploadBatch,
+	addUploadedImages,
+	isValidImageFilename,
+	nameUploads,
+	normalizeUploads,
 } from '../src/lib/admin/upload-rules.mjs';
 
 const COOKIE_NAME = 'git_admin_session';
@@ -22,7 +25,6 @@ const ALLOWED_PREFIXES = [
 ];
 
 const SLUG_RE = /^[a-z0-9][a-z0-9&_-]*$/i;
-const IMAGE_NAME_RE = /^[a-z0-9][a-z0-9._&-]*\.(png|jpe?g|webp|gif)$/i;
 
 function loadDevVars(root) {
 	try {
@@ -187,45 +189,8 @@ function prettyJson(data) {
 	return `${JSON.stringify(data, null, 4)}\n`;
 }
 
-function sanitizeImageFilename(name) {
-	const base = name.split(/[/\\]/).pop()?.trim() ?? '';
-	const m = base.match(/^(.*)\.(png|jpe?g|webp|gif)$/i);
-	if (!m) return '';
-	const stem = m[1]
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '')
-		.slice(0, 80);
-	const ext = m[2].toLowerCase() === 'jpeg' ? 'jpg' : m[2].toLowerCase();
-	return `${stem || 'image'}.${ext}`;
-}
-
-function uniqueImageFilename(name, taken) {
-	const dot = name.lastIndexOf('.');
-	const stem = name.slice(0, dot);
-	const ext = name.slice(dot);
-	let candidate = name;
-	for (let n = 1; taken.has(candidate.toLowerCase()); n++) candidate = `${stem}-${n}${ext}`;
-	taken.add(candidate.toLowerCase());
-	return candidate;
-}
-
-function normalizeUploads(value) {
-	if (value === undefined || value === null) return [];
-	if (!Array.isArray(value)) return 'files must be an array';
-	const files = [];
-	for (const item of value) {
-		if (!item || typeof item !== 'object') return 'invalid files entry';
-		if (typeof item.filename !== 'string') return `invalid filename: ${String(item.filename)}`;
-		const filename = sanitizeImageFilename(item.filename);
-		if (!filename || !IMAGE_NAME_RE.test(filename)) return `invalid filename: ${item.filename}`;
-		const checked = validateImageUpload(filename, item.contentBase64);
-		if (!checked.ok) return checked.error;
-		files.push({ filename, contentBase64: checked.contentBase64, size: checked.size });
-	}
-	const batchError = validateUploadBatch(files);
-	if (batchError) return batchError;
-	return files.map(({ filename, contentBase64 }) => ({ filename, contentBase64 }));
+async function nameUploadsInFolder(root, folder, files) {
+	nameUploads(files, await readdir(join(root, `src/assets/${folder}`)).catch(() => []));
 }
 
 function normalizeImgs(value) {
@@ -266,7 +231,7 @@ function normalizeExec(input) {
 	const img =
 		typeof input.img === 'string' && input.img.trim()
 			? input.img.trim()
-			: '/assets/execs/placeholder.jpg';
+			: EXEC_PLACEHOLDER;
 	let imgs;
 	if (input.imgs !== undefined) {
 		const parsed = normalizeImgs(input.imgs);
@@ -295,7 +260,7 @@ function publicPathToRepoPath(publicPath) {
 	const match = publicPath.match(/^\/assets\/(events|execs|gallery)\/([^/]+)$/);
 	if (!match) return null;
 	const filename = match[2];
-	if (!IMAGE_NAME_RE.test(filename)) return null;
+	if (!isValidImageFilename(filename)) return null;
 	return `src/assets/${match[1]}/${filename}`;
 }
 
@@ -375,6 +340,8 @@ async function handle(root, req, res) {
 				sendJson(res, 409, { error: `Event already exists: ${id}` });
 				return true;
 			}
+			await nameUploadsInFolder(root, 'events', files);
+			addUploadedImages('events', data, files);
 			const commit = await applyChanges(root, `admin: create event ${id}`, [
 				{ path: jsonPath, content: prettyJson(data) },
 				...uploadChanges('events', files),
@@ -406,6 +373,8 @@ async function handle(root, req, res) {
 					sendJson(res, 404, { error: 'Event not found' });
 					return true;
 				}
+				await nameUploadsInFolder(root, 'events', files);
+				addUploadedImages('events', data, files);
 				const commit = await applyChanges(root, `admin: update event ${id}`, [
 					{ path: jsonPath, content: prettyJson(data) },
 					...uploadChanges('events', files),
@@ -456,6 +425,8 @@ async function handle(root, req, res) {
 				sendJson(res, 409, { error: `Exec already exists: ${id}` });
 				return true;
 			}
+			await nameUploadsInFolder(root, 'execs', files);
+			addUploadedImages('execs', data, files);
 			const commit = await applyChanges(root, `admin: create exec ${id}`, [
 				{ path: jsonPath, content: prettyJson(data) },
 				...uploadChanges('execs', files),
@@ -487,6 +458,8 @@ async function handle(root, req, res) {
 					sendJson(res, 404, { error: 'Exec not found' });
 					return true;
 				}
+				await nameUploadsInFolder(root, 'execs', files);
+				addUploadedImages('execs', data, files);
 				const commit = await applyChanges(root, `admin: update exec ${id}`, [
 					{ path: jsonPath, content: prettyJson(data) },
 					...uploadChanges('execs', files),
@@ -531,9 +504,7 @@ async function handle(root, req, res) {
 				sendJson(res, 400, { error: 'No files to upload' });
 				return true;
 			}
-			const existing = await readdir(join(root, 'src/assets/gallery')).catch(() => []);
-			const taken = new Set(existing.map((name) => name.toLowerCase()));
-			for (const file of files) file.filename = uniqueImageFilename(file.filename, taken);
+			await nameUploadsInFolder(root, 'gallery', files);
 			const commit = await applyChanges(
 				root,
 				files.length === 1
@@ -556,7 +527,7 @@ async function handle(root, req, res) {
 		const galleryMatch = pathname.match(/^\/api\/admin\/gallery\/([^/]+)$/);
 		if (galleryMatch && method === 'DELETE') {
 			const name = decodeURIComponent(galleryMatch[1]);
-			if (!IMAGE_NAME_RE.test(name)) {
+			if (!isValidImageFilename(name)) {
 				sendJson(res, 400, { error: 'Invalid image name' });
 				return true;
 			}

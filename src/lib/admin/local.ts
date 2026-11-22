@@ -166,6 +166,15 @@ export async function listLocalExecs(): Promise<{ id: string; data: unknown }[]>
 	return (await listJsonFromDisk('src/data/execs')) ?? globExecs();
 }
 
+export async function listLocalDirectory(repoPath: string): Promise<string[]> {
+	try {
+		const { readdir } = await import('node:fs/promises');
+		return await readdir(await absRepoPath(repoPath));
+	} catch {
+		return [];
+	}
+}
+
 export async function listLocalGallery(): Promise<{ name: string; path: string }[]> {
 	try {
 		const { readdir } = await import('node:fs/promises');

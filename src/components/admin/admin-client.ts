@@ -5,8 +5,9 @@ import {
 	MAX_UPLOAD_TOTAL_BYTES,
 	formatBytes,
 	mimeForImageFilename,
+	sanitizeImageFilename,
+	uniqueImageFilename,
 } from '../../lib/admin/upload-rules.mjs';
-import { sanitizeImageFilename, uniqueImageFilename } from '../../lib/admin/content';
 
 type ImgRef = { path: string; alt?: string };
 
@@ -118,13 +119,6 @@ function checkUploadBatch(input: HTMLInputElement): string | null {
 	const files = Array.from(input.files ?? []);
 	const fileError = checkUploadFiles(files);
 	if (fileError) return fileError;
-	const savedNames = new Map<string, string>();
-	for (const file of files) {
-		const saved = sanitizeImageFilename(file.name);
-		const clash = savedNames.get(saved);
-		if (clash) return `${clash} and ${file.name} would both be saved as ${saved}. Rename one and try again.`;
-		savedNames.set(saved, file.name);
-	}
 	if (files.length > MAX_UPLOAD_FILES) {
 		return `Choose at most ${MAX_UPLOAD_FILES} images per save, then add the rest in another save.`;
 	}

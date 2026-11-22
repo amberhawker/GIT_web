@@ -1,5 +1,14 @@
 import type { FileChange } from './github';
-import { validateImageUpload, validateUploadBatch } from './upload-rules.mjs';
+import { EXEC_PLACEHOLDER } from './upload-rules.mjs';
+
+export {
+	EXEC_PLACEHOLDER,
+	addUploadedImages,
+	isValidImageFilename,
+	nameUploads,
+	normalizeUploads,
+	sanitizeImageFilename,
+} from './upload-rules.mjs';
 
 export const EVENTS_DIR = 'src/data/events';
 export const EXECS_DIR = 'src/data/execs';
@@ -8,8 +17,6 @@ export const EXECS_ASSETS = 'src/assets/execs';
 export const GALLERY_ASSETS = 'src/assets/gallery';
 
 const SLUG_RE = /^[a-z0-9][a-z0-9&_-]*$/i;
-/** `&` allowed for legacy assets like meet&greet.png */
-const IMAGE_NAME_RE = /^[a-z0-9][a-z0-9._&-]*\.(png|jpe?g|webp|gif)$/i;
 
 export type ImgRef = { path: string; alt?: string };
 
@@ -45,31 +52,6 @@ export function errorResponse(message: string, status = 400): Response {
 
 export function isValidSlug(id: string): boolean {
 	return SLUG_RE.test(id) && !id.includes('..') && !id.includes('/');
-}
-
-export function isValidImageFilename(name: string): boolean {
-	return IMAGE_NAME_RE.test(name) && !name.includes('..') && !name.includes('/');
-}
-
-/** `LWScreenShot 2026-11-10 at 2.35.00 PM.png` → `lwscreenshot-2026-11-10-at-2-35-00-pm.png` */
-export function sanitizeImageFilename(name: string): string {
-	const base = name.split(/[/\\]/).pop()?.trim() ?? '';
-	const m = base.match(/^(.*)\.(png|jpe?g|webp|gif)$/i);
-	if (!m) return '';
-	const stem = m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
-	const ext = m[2].toLowerCase() === 'jpeg' ? 'jpg' : m[2].toLowerCase();
-	return `${stem || 'image'}.${ext}`;
-}
-
-/** Returns `name`, or `name-1`, `name-2`, … if taken; records the result in `taken` (lowercase). */
-export function uniqueImageFilename(name: string, taken: Set<string>): string {
-	const dot = name.lastIndexOf('.');
-	const stem = name.slice(0, dot);
-	const ext = name.slice(dot);
-	let candidate = name;
-	for (let n = 1; taken.has(candidate.toLowerCase()); n++) candidate = `${stem}-${n}${ext}`;
-	taken.add(candidate.toLowerCase());
-	return candidate;
 }
 
 export function publicAssetPath(folder: 'events' | 'execs' | 'gallery', filename: string): string {
@@ -120,7 +102,7 @@ export function normalizeExec(input: unknown): ExecData | string {
 	const img =
 		typeof raw.img === 'string' && raw.img.trim()
 			? raw.img.trim()
-			: '/assets/execs/placeholder.jpg';
+			: EXEC_PLACEHOLDER;
 
 	let imgs: ImgRef[] | undefined;
 	if (raw.imgs !== undefined) {
@@ -160,33 +142,6 @@ function normalizeImgs(value: unknown): ImgRef[] | string {
 		});
 	}
 	return imgs;
-}
-
-export function normalizeUploads(value: unknown): UploadedFile[] | string {
-	if (value === undefined || value === null) return [];
-	if (!Array.isArray(value)) return 'files must be an array';
-
-	const files: (UploadedFile & { size: number })[] = [];
-	for (const item of value) {
-		if (!item || typeof item !== 'object') return 'invalid files entry';
-		const file = item as Record<string, unknown>;
-		if (typeof file.filename !== 'string') {
-			return `invalid filename: ${String(file.filename)}`;
-		}
-		const filename = sanitizeImageFilename(file.filename);
-		if (!filename || !isValidImageFilename(filename)) {
-			return `invalid filename: ${file.filename}`;
-		}
-		if (typeof file.contentBase64 !== 'string' || !file.contentBase64) {
-			return `missing contentBase64 for ${file.filename}`;
-		}
-		const checked = validateImageUpload(filename, file.contentBase64);
-		if (!checked.ok) return checked.error;
-		files.push({ filename, contentBase64: checked.contentBase64, size: checked.size });
-	}
-	const batchError = validateUploadBatch(files);
-	if (batchError) return batchError;
-	return files.map(({ filename, contentBase64 }) => ({ filename, contentBase64 }));
 }
 
 export function prettyJson(data: unknown): string {
