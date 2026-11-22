@@ -242,26 +242,39 @@ const authed = Astro.locals.adminAuthed;
 		loginError?.classList.add('hidden');
 		if (loginError) loginError.textContent = '';
 
+		const submitBtn = loginForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+		if (submitBtn?.disabled) return;
+		if (submitBtn) submitBtn.disabled = true;
+
+		const showError = (message: string) => {
+			if (submitBtn) submitBtn.disabled = false;
+			if (!loginError) return;
+			loginError.textContent = message;
+			loginError.classList.remove('hidden');
+		};
+
 		const password = String(new FormData(loginForm).get('password') ?? '');
 		const res = await fetch('/api/admin/login', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ password }),
-		});
+		}).catch(() => null);
 
+		if (!res) return showError('Network error. Check your connection and try again.');
 		if (!res.ok) {
 			const body = (await res.json().catch(() => ({}))) as { error?: string };
-			if (loginError) {
-				loginError.textContent = body.error ?? 'Login failed';
-				loginError.classList.remove('hidden');
-			}
-			return;
+			return showError(body.error ?? 'Login failed');
 		}
 		window.location.reload();
 	});
 
 	const logout = async (url: string) => {
 		const res = await fetch(url, { method: 'POST' }).catch(() => null);
+		// 401: this session already ended (e.g. "Log out everywhere" on another device).
+		if (res?.status === 401) {
+			window.location.reload();
+			return;
+		}
 		if (!res?.ok) {
 			const body = (await res?.json().catch(() => ({}))) as { error?: string } | undefined;
 			alert(`Logout failed: ${body?.error ?? 'network error'}. Sessions may still be active.`);

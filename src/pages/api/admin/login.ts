@@ -16,8 +16,11 @@ import {
 } from '../../../lib/admin/session';
 
 function tooManyAttempts(retryAfter: number): Response {
+	const minutes = Math.max(1, Math.ceil(retryAfter / 60));
 	return Response.json(
-		{ error: 'Too many login attempts. Try again later.' },
+		{
+			error: `Too many login attempts from this network. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`,
+		},
 		{ status: 429, headers: { 'Retry-After': String(retryAfter) } }
 	);
 }

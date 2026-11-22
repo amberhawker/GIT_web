@@ -35,9 +35,9 @@ PR preview builds (Workers Previews) don't inherit or auto-provision KV, so `wra
 ### How admin security works
 
 - **Revocable sessions:** login stores a random session id in `ADMIN_KV`; the signed cookie only stays valid while that KV entry exists. "Log out" deletes the entry; "Log out everywhere" (`POST /api/admin/logout?all=1`) deletes all of them. Rotating `SESSION_SECRET` also invalidates every session.
-- **Login rate limiting:** 5 failed passwords per IP lock that IP out for 15 minutes (HTTP 429 with `Retry-After`), plus the burst limiter above.
+- **Login rate limiting:** 10 failed passwords per IP lock that IP out for 15 minutes (people on shared Wi-Fi share an IP) (HTTP 429 with `Retry-After`), plus the burst limiter above.
 - **HTTPS + headers:** the Worker redirects HTTP to HTTPS (301/308) and sets HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, and a `frame-ancestors`/`object-src` CSP. Static pages get the same headers from `public/_headers`. Admin responses are `Cache-Control: no-store`.
-- **Uploads:** images must be PNG, JPEG, WebP, or GIF by file signature (magic bytes) and match their extension. Limits: 10 MB per image, 12 images and 30 MB per request (`src/lib/admin/upload-rules.mjs`, shared by the Worker and the local dev writer).
+- **Uploads:** images must be PNG, JPEG, WebP, or GIF by file signature (magic bytes) and match their extension. Limits: 10 MB per image, 12 images and 30 MB per request; the admin UI checks these before uploading and splits large gallery uploads into several requests (`src/lib/admin/upload-rules.mjs`, shared by the Worker and the local dev writer).
 
 ### Recommended Cloudflare dashboard settings
 

@@ -13,13 +13,18 @@ import {
 /**
  * Revoke the caller's session server-side and clear the cookie.
  * `?all=1` (or JSON `{ "all": true }`) revokes every active admin session.
- * Middleware only lets authenticated requests reach this route.
+ * Single-session logout is allowed without a live session so a stale cookie
+ * can always be cleared; `all` requires an authenticated session.
  */
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: APIRoute = async ({ request, url, locals }) => {
 	let all = url.searchParams.get('all') === '1';
 	if (!all && (request.headers.get('content-type') ?? '').includes('application/json')) {
 		const body = (await request.json().catch(() => ({}))) as { all?: unknown };
 		all = body.all === true;
+	}
+
+	if (all && !locals.adminAuthed) {
+		return Response.json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
 	let revoked = 0;

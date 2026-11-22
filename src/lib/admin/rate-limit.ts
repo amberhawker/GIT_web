@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 
 /** Failed attempts allowed per client IP within the window before lockout. */
-export const LOGIN_MAX_FAILURES = 5;
+export const LOGIN_MAX_FAILURES = 10;
 export const LOGIN_WINDOW_SECONDS = 15 * 60;
 
 const KEY_PREFIX = 'login-fail:';

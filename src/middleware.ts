@@ -42,7 +42,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	context.locals.adminAuthed = authed;
 
 	const isPublicApi =
-		pathname === '/api/admin/login' || pathname === '/api/admin/session';
+		pathname === '/api/admin/login' ||
+		pathname === '/api/admin/session' ||
+		pathname === '/api/admin/logout';
 
 	if (isAdminApi && !isPublicApi && !authed) {
 		return finish(Response.json({ error: 'Unauthorized' }, { status: 401 }));
