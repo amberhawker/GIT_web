@@ -6,7 +6,7 @@ import {
 	formatBytes,
 	mimeForImageFilename,
 } from '../../lib/admin/upload-rules.mjs';
-import { sanitizeImageFilename } from '../../lib/admin/content';
+import { sanitizeImageFilename, uniqueImageFilename } from '../../lib/admin/content';
 
 type ImgRef = { path: string; alt?: string };
 
@@ -101,14 +101,7 @@ function fileToBase64(file: File): Promise<string> {
 
 /** Per-file checks mirroring the server rules, so bad files fail before upload. */
 function checkUploadFiles(files: File[]): string | null {
-	const savedNames = new Map<string, string>();
 	for (const file of files) {
-		const saved = sanitizeImageFilename(file.name);
-		const clash = savedNames.get(saved);
-		if (saved && clash) {
-			return `${clash} and ${file.name} would both be saved as ${saved}. Rename one and try again.`;
-		}
-		savedNames.set(saved, file.name);
 		const mime = mimeForImageFilename(file.name);
 		if (!mime || (file.type && !ALLOWED_IMAGE_MIME_TYPES.includes(file.type))) {
 			return `${file.name} isn't a supported image. Use PNG, JPEG, WebP, or GIF.`;
@@ -125,6 +118,13 @@ function checkUploadBatch(input: HTMLInputElement): string | null {
 	const files = Array.from(input.files ?? []);
 	const fileError = checkUploadFiles(files);
 	if (fileError) return fileError;
+	const savedNames = new Map<string, string>();
+	for (const file of files) {
+		const saved = sanitizeImageFilename(file.name);
+		const clash = savedNames.get(saved);
+		if (clash) return `${clash} and ${file.name} would both be saved as ${saved}. Rename one and try again.`;
+		savedNames.set(saved, file.name);
+	}
 	if (files.length > MAX_UPLOAD_FILES) {
 		return `Choose at most ${MAX_UPLOAD_FILES} images per save, then add the rest in another save.`;
 	}
@@ -153,10 +153,10 @@ function uploadBatches(files: File[]): File[][] {
 	return batches;
 }
 
-async function encodeUploads(list: File[]) {
+async function encodeUploads(list: File[], names?: Map<File, string>) {
 	const files = [];
 	for (const file of list) {
-		files.push({ filename: file.name, contentBase64: await fileToBase64(file) });
+		files.push({ filename: names?.get(file) ?? file.name, contentBase64: await fileToBase64(file) });
 	}
 	return files;
 }
@@ -576,11 +576,13 @@ async function initGallery(root: HTMLElement) {
 	const status = qs<HTMLElement>(root, '#gallery-status');
 	const progress = root.querySelector('#gallery-progress') as HTMLElement | null;
 	const filesInput = qs<HTMLInputElement>(form, '[name="files"]');
+	let galleryNames: string[] = [];
 
 	async function refresh() {
 		setStatus(status, 'Loading gallery…');
 		const res = await api<{ images: { name: string }[] }>('/api/admin/gallery');
 		if (!res.ok) return setStatus(status, res.error, 'err');
+		galleryNames = res.data.images.map((image) => image.name);
 
 		grid.replaceChildren(
 			...res.data.images.map((image) => {
@@ -630,6 +632,9 @@ async function initGallery(root: HTMLElement) {
 		const uploadError = checkUploadFiles(selected);
 		if (uploadError) return setStatus(status, uploadError, 'err');
 
+		// Number duplicate names (photo.jpg → photo-1.jpg) so later batches can't replace earlier ones.
+		const taken = new Set(galleryNames.map((name) => name.toLowerCase()));
+		const names = new Map(selected.map((file) => [file, uniqueImageFilename(sanitizeImageFilename(file.name), taken)]));
 		const batches = uploadBatches(selected);
 		const label = (i: number, percent: number) =>
 			batches.length > 1 ? `Uploading part ${i + 1} of ${batches.length}… ${percent}%` : `Uploading… ${percent}%`;
@@ -638,7 +643,7 @@ async function initGallery(root: HTMLElement) {
 		setStatus(status, label(0, 0));
 		setProgress(progress, 0);
 		for (const [i, batch] of batches.entries()) {
-			const files = await encodeUploads(batch);
+			const files = await encodeUploads(batch, names);
 			const res = await api<{ commit?: CommitInfo; source?: 'github' | 'local' }>('/api/admin/gallery', {
 				method: 'POST',
 				body: JSON.stringify({ files }),

@@ -200,6 +200,16 @@ function sanitizeImageFilename(name) {
 	return `${stem || 'image'}.${ext}`;
 }
 
+function uniqueImageFilename(name, taken) {
+	const dot = name.lastIndexOf('.');
+	const stem = name.slice(0, dot);
+	const ext = name.slice(dot);
+	let candidate = name;
+	for (let n = 1; taken.has(candidate.toLowerCase()); n++) candidate = `${stem}-${n}${ext}`;
+	taken.add(candidate.toLowerCase());
+	return candidate;
+}
+
 function normalizeUploads(value) {
 	if (value === undefined || value === null) return [];
 	if (!Array.isArray(value)) return 'files must be an array';
@@ -521,6 +531,9 @@ async function handle(root, req, res) {
 				sendJson(res, 400, { error: 'No files to upload' });
 				return true;
 			}
+			const existing = await readdir(join(root, 'src/assets/gallery')).catch(() => []);
+			const taken = new Set(existing.map((name) => name.toLowerCase()));
+			for (const file of files) file.filename = uniqueImageFilename(file.filename, taken);
 			const commit = await applyChanges(
 				root,
 				files.length === 1

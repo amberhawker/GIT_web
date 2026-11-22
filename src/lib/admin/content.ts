@@ -61,6 +61,17 @@ export function sanitizeImageFilename(name: string): string {
 	return `${stem || 'image'}.${ext}`;
 }
 
+/** Returns `name`, or `name-1`, `name-2`, … if taken; records the result in `taken` (lowercase). */
+export function uniqueImageFilename(name: string, taken: Set<string>): string {
+	const dot = name.lastIndexOf('.');
+	const stem = name.slice(0, dot);
+	const ext = name.slice(dot);
+	let candidate = name;
+	for (let n = 1; taken.has(candidate.toLowerCase()); n++) candidate = `${stem}-${n}${ext}`;
+	taken.add(candidate.toLowerCase());
+	return candidate;
+}
+
 export function publicAssetPath(folder: 'events' | 'execs' | 'gallery', filename: string): string {
 	return `/assets/${folder}/${filename}`;
 }

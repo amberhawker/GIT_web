@@ -8,6 +8,7 @@ import {
 	jsonResponse,
 	normalizeUploads,
 	publicAssetPath,
+	uniqueImageFilename,
 } from '../../../../lib/admin/content';
 import { listRepoDirectory } from '../../../../lib/admin/github';
 import { listLocalGallery } from '../../../../lib/admin/local';
@@ -56,6 +57,10 @@ export const POST: APIRoute = async ({ request }) => {
 	if (files.length === 0) return errorResponse('No files to upload');
 
 	try {
+		const existing = await listRepoDirectory(GALLERY_ASSETS);
+		const taken = new Set(existing.map((entry) => entry.name.toLowerCase()));
+		for (const file of files) file.filename = uniqueImageFilename(file.filename, taken);
+
 		const result = await persistAdminChanges(
 			files.length === 1
 				? `admin: add gallery image ${files[0].filename}`
