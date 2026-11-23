@@ -24,11 +24,11 @@ function encodeRepoPath(path: string): string {
 		.join('/');
 }
 
-async function gh<T = GhJson>(
+async function ghResponse(
 	path: string,
 	token: string,
 	init: RequestInit = {}
-): Promise<T> {
+): Promise<Response> {
 	const { headers: extraHeaders, ...rest } = init;
 	const res = await fetch(`${API}${path}`, {
 		...rest,
@@ -42,17 +42,8 @@ async function gh<T = GhJson>(
 		},
 	});
 
-	const text = await res.text();
-	let body: unknown = null;
-	if (text) {
-		try {
-			body = JSON.parse(text);
-		} catch {
-			body = text;
-		}
-	}
-
 	if (!res.ok) {
+		const body = await readGitHubBody(res);
 		const msg =
 			typeof body === 'object' &&
 			body &&
@@ -63,7 +54,25 @@ async function gh<T = GhJson>(
 		throw new GitHubError(msg, res.status, body);
 	}
 
-	return body as T;
+	return res;
+}
+
+async function readGitHubBody(res: Response): Promise<unknown> {
+	const text = await res.text();
+	if (!text) return null;
+	try {
+		return JSON.parse(text);
+	} catch {
+		return text;
+	}
+}
+
+async function gh<T = GhJson>(
+	path: string,
+	token: string,
+	init: RequestInit = {}
+): Promise<T> {
+	return (await readGitHubBody(await ghResponse(path, token, init))) as T;
 }
 
 function repoParts(repo: string): { owner: string; name: string } {
@@ -159,24 +168,17 @@ export async function getRepoTextFile(path: string): Promise<{
 }
 
 /** Read a binary file from the repo (e.g. images for admin previews). */
-export async function getRepoBinaryFile(path: string): Promise<{
-	sha: string;
-	bytes: Uint8Array;
-} | null> {
+export async function getRepoBinaryFile(path: string): Promise<ReadableStream<Uint8Array> | null> {
 	const { GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH } = getAdminEnv();
 	const { owner, name } = repoParts(GITHUB_REPO);
 
 	try {
-		const file = await gh<ContentFile>(
+		const file = await ghResponse(
 			`/repos/${owner}/${name}/contents/${encodeRepoPath(path)}?ref=${encodeURIComponent(GITHUB_BRANCH)}`,
-			GITHUB_TOKEN
+			GITHUB_TOKEN,
+			{ headers: { Accept: 'application/vnd.github.raw+json' } }
 		);
-		if (file.type !== 'file' || !file.content) return null;
-		const bytes =
-			file.encoding === 'base64'
-				? decodeBase64Bytes(file.content)
-				: new TextEncoder().encode(file.content);
-		return { sha: file.sha, bytes };
+		return file.body;
 	} catch (err) {
 		if (err instanceof GitHubError && err.status === 404) return null;
 		throw err;

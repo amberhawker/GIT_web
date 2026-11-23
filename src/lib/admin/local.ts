@@ -220,7 +220,7 @@ export async function readLocalTextFile(
 }
 
 /** Read a gallery image from the local workspace (dev / nodejs_compat). */
-export async function readLocalGalleryFile(name: string): Promise<Uint8Array | null> {
+export async function readLocalGalleryFile(name: string): Promise<Uint8Array<ArrayBuffer> | null> {
 	try {
 		const { readFile } = await import('node:fs/promises');
 		const { join } = await import('node:path');
