@@ -1,7 +1,34 @@
 {
     "title": "Sharky Tank",
     "imgs": [
-        {"path": "/assets/events/sharkytank.jpg", "alt": "animated git logo"}
+        {
+            "path": "/assets/events/sharkytank.jpg",
+            "alt": "animated git logo"
+        },
+        {
+            "path": "/assets/events/1-audience.jpg"
+        },
+        {
+            "path": "/assets/events/1-bts.jpg"
+        },
+        {
+            "path": "/assets/events/1-exec.jpg"
+        },
+        {
+            "path": "/assets/events/1-hackathon.jpg"
+        },
+        {
+            "path": "/assets/events/1-judge.jpg"
+        },
+        {
+            "path": "/assets/events/1-morph.jpg"
+        },
+        {
+            "path": "/assets/events/2-judge.jpg"
+        },
+        {
+            "path": "/assets/events/3-judge.jpg"
+        }
     ],
     "description": "Dive into innovation at Sharky Tank! A fast-paced, pitching-style competition where UBCO students channel their inner entrepreneurs. Teams of 4 present their ideas in a given category under 3 minutes to the judges.",
     "date": "",
