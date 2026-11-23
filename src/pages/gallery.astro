@@ -82,6 +82,7 @@ const tilts = [
               <Image
                 src={img.data}
                 alt={img.filename}
+                width={Math.min(img.data.width, Math.ceil(img.data.width * 512 / img.data.height))}
                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
               />

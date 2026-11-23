@@ -13,6 +13,7 @@ import {
 	isValidImageFilename,
 	nameUploads,
 	normalizeUploads,
+	prepareEventUploads,
 } from '../src/lib/admin/upload-rules.mjs';
 
 const COOKIE_NAME = 'git_admin_session';
@@ -190,7 +191,11 @@ function prettyJson(data) {
 }
 
 async function nameUploadsInFolder(root, folder, files) {
-	nameUploads(files, await readdir(join(root, `src/assets/${folder}`)).catch(() => []));
+	nameUploads(files, await listUploadNames(root, folder));
+}
+
+function listUploadNames(root, folder) {
+	return readdir(join(root, `src/assets/${folder}`)).catch(() => []);
 }
 
 function normalizeImgs(value) {
@@ -340,11 +345,10 @@ async function handle(root, req, res) {
 				sendJson(res, 409, { error: `Event already exists: ${id}` });
 				return true;
 			}
-			await nameUploadsInFolder(root, 'events', files);
-			addUploadedImages('events', data, files);
+			const uploads = await prepareEventUploads(data, files, (folder) => listUploadNames(root, folder));
 			const commit = await applyChanges(root, `admin: create event ${id}`, [
 				{ path: jsonPath, content: prettyJson(data) },
-				...uploadChanges('events', files),
+				...uploads,
 			]);
 			sendJson(res, 201, { ok: true, id, data, commit, source: 'local' });
 			return true;
@@ -373,11 +377,10 @@ async function handle(root, req, res) {
 					sendJson(res, 404, { error: 'Event not found' });
 					return true;
 				}
-				await nameUploadsInFolder(root, 'events', files);
-				addUploadedImages('events', data, files);
+				const uploads = await prepareEventUploads(data, files, (folder) => listUploadNames(root, folder));
 				const commit = await applyChanges(root, `admin: update event ${id}`, [
 					{ path: jsonPath, content: prettyJson(data) },
-					...uploadChanges('events', files),
+					...uploads,
 				]);
 				sendJson(res, 200, { ok: true, id, data, commit, source: 'local' });
 				return true;

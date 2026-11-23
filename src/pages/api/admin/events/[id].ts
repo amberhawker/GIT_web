@@ -3,16 +3,14 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import {
 	EVENTS_DIR,
+	EVENTS_ASSETS,
+	GALLERY_ASSETS,
 	assetDeletesFromEntry,
 	errorResponse,
-	fileChangesForUploads,
 	isValidSlug,
 	jsonResponse,
 	normalizeEvent,
 	normalizeUploads,
-	EVENTS_ASSETS,
-	addUploadedImages,
-	nameUploads,
 	prettyJson,
 } from '../../../../lib/admin/content';
 import {
@@ -21,6 +19,7 @@ import {
 	persistAdminChanges,
 	persistErrorResponse,
 } from '../../../../lib/admin/persist';
+import { prepareEventUploads } from '../../../../lib/admin/upload-rules.mjs';
 
 export const GET: APIRoute = async ({ params }) => {
 	const id = params.id ?? '';
@@ -59,12 +58,13 @@ export const PUT: APIRoute = async ({ params, request }) => {
 		const existing = await getAdminTextFile(jsonPath);
 		if (!existing) return errorResponse('Event not found', 404);
 
-		nameUploads(files, await listAdminAssetNames(EVENTS_ASSETS));
-		addUploadedImages('events', data, files);
+		const uploadChanges = await prepareEventUploads(data, files, (folder) =>
+			listAdminAssetNames(folder === 'events' ? EVENTS_ASSETS : GALLERY_ASSETS)
+		);
 
 		const result = await persistAdminChanges(`admin: update event ${id}`, [
 			{ path: jsonPath, content: prettyJson(data) },
-			...fileChangesForUploads('events', files),
+			...uploadChanges,
 		]);
 		return jsonResponse({ ok: true, id, data, commit: result, source: result.source });
 	} catch (err) {

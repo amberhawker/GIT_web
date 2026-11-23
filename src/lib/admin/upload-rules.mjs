@@ -245,3 +245,34 @@ export function addUploadedImages(folder, data, files) {
 	data.imgs = [...imgs, ...paths.filter((path) => !listed.has(path)).map((path) => ({ path }))];
 	if (folder === 'execs' && (!data.img || data.img === EXEC_PLACEHOLDER)) data.img = paths[0];
 }
+
+/**
+ * @param {{ imgs: { path: string; alt?: string }[] }} data
+ * @param {UploadedFile[]} files
+ * @param {(folder: 'events' | 'gallery') => Promise<string[]>} listNames
+ * @returns {Promise<{ path: string; content: string; encoding: 'base64'; createOnly: true }[]>}
+ */
+export async function prepareEventUploads(data, files, listNames) {
+	if (files.length === 0) return [];
+
+	const [eventNames, galleryNames] = await Promise.all([listNames('events'), listNames('gallery')]);
+	const galleryFiles = files.map((file) => ({ ...file }));
+	nameUploads(files, eventNames);
+	nameUploads(galleryFiles, galleryNames);
+	addUploadedImages('events', data, files);
+
+	return [
+		...files.map(({ filename, contentBase64 }) => ({
+			path: `src/assets/events/${filename}`,
+			content: contentBase64,
+			encoding: 'base64',
+			createOnly: true,
+		})),
+		...galleryFiles.map(({ filename, contentBase64 }) => ({
+			path: `src/assets/gallery/${filename}`,
+			content: contentBase64,
+			encoding: 'base64',
+			createOnly: true,
+		})),
+	];
+}

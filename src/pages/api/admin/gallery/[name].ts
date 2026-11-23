@@ -21,8 +21,8 @@ function contentTypeFor(name: string): string {
 	return 'application/octet-stream';
 }
 
-function imageResponse(bytes: Uint8Array, name: string): Response {
-	return new Response(bytes, {
+function imageResponse(body: BodyInit, name: string): Response {
+	return new Response(body, {
 		status: 200,
 		headers: {
 			'Content-Type': contentTypeFor(name),
@@ -38,7 +38,7 @@ export const GET: APIRoute = async ({ params }) => {
 
 	try {
 		const file = await getRepoBinaryFile(repoAssetPath('gallery', name));
-		if (file) return imageResponse(file.bytes, name);
+		if (file) return imageResponse(file, name);
 	} catch (err) {
 		console.warn('admin gallery image: GitHub read failed, trying local file', err);
 	}
