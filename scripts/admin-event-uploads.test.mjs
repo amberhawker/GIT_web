@@ -14,10 +14,10 @@ test('event uploads leave existing photos alone and publish independent Gallery 
 	const uploads = await prepareEventUploads(data, files, async (folder) => names[folder]);
 
 	assert.deepEqual(uploads, [
-		{ path: 'src/assets/events/photo-1.jpg', content: 'AA==', encoding: 'base64' },
-		{ path: 'src/assets/events/another.jpg', content: 'AQ==', encoding: 'base64' },
-		{ path: 'src/assets/gallery/photo.jpg', content: 'AA==', encoding: 'base64' },
-		{ path: 'src/assets/gallery/another-1.jpg', content: 'AQ==', encoding: 'base64' },
+		{ path: 'src/assets/events/photo-1.jpg', content: 'AA==', encoding: 'base64', createOnly: true },
+		{ path: 'src/assets/events/another.jpg', content: 'AQ==', encoding: 'base64', createOnly: true },
+		{ path: 'src/assets/gallery/photo.jpg', content: 'AA==', encoding: 'base64', createOnly: true },
+		{ path: 'src/assets/gallery/another-1.jpg', content: 'AQ==', encoding: 'base64', createOnly: true },
 	]);
 	assert.deepEqual(data.imgs, [existing, { path: '/assets/events/photo-1.jpg' }, { path: '/assets/events/another.jpg' }]);
 });

@@ -156,6 +156,7 @@ export function fileChangesForUploads(
 		path: repoAssetPath(folder, file.filename),
 		content: file.contentBase64,
 		encoding: 'base64' as const,
+		createOnly: true,
 	}));
 }
 

@@ -85,6 +85,7 @@ export type FileUpsert = {
 	path: string;
 	content: string;
 	encoding?: 'utf-8' | 'base64';
+	createOnly?: boolean;
 };
 
 export type FileDelete = {
@@ -105,6 +106,7 @@ type RefResponse = { object: { sha: string } };
 type CommitResponse = { sha: string; tree: { sha: string }; html_url?: string };
 type BlobResponse = { sha: string };
 type TreeResponse = { sha: string };
+type TreeListing = { tree: { path: string }[]; truncated: boolean };
 type ContentFile = {
 	type: string;
 	name: string;
@@ -228,6 +230,21 @@ export async function commitFiles(
 
 	const headCommit = await gh<CommitResponse>(`${base}/git/commits/${headSha}`, token);
 	const baseTreeSha = headCommit.tree.sha;
+
+	const newFiles = changes.filter((change): change is FileUpsert => !isDelete(change) && change.createOnly === true);
+	if (newFiles.length > 0) {
+		const { tree, truncated } = await gh<TreeListing>(`${base}/git/trees/${baseTreeSha}?recursive=1`, token);
+		if (truncated) throw new GitHubError('Cannot verify upload names: repository tree is incomplete', 502, null);
+
+		const occupied = new Set(tree.map(({ path }) => path.toLowerCase()));
+		for (const { path } of newFiles) {
+			const key = path.toLowerCase();
+			if (occupied.has(key)) {
+				throw new GitHubError(`Image already exists: ${path}; refresh and retry`, 409, null);
+			}
+			occupied.add(key);
+		}
+	}
 
 	const treeItems: Array<{
 		path: string;

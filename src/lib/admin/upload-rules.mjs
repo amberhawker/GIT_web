@@ -250,7 +250,7 @@ export function addUploadedImages(folder, data, files) {
  * @param {{ imgs: { path: string; alt?: string }[] }} data
  * @param {UploadedFile[]} files
  * @param {(folder: 'events' | 'gallery') => Promise<string[]>} listNames
- * @returns {Promise<{ path: string; content: string; encoding: 'base64' }[]>}
+ * @returns {Promise<{ path: string; content: string; encoding: 'base64'; createOnly: true }[]>}
  */
 export async function prepareEventUploads(data, files, listNames) {
 	if (files.length === 0) return [];
@@ -266,11 +266,13 @@ export async function prepareEventUploads(data, files, listNames) {
 			path: `src/assets/events/${filename}`,
 			content: contentBase64,
 			encoding: 'base64',
+			createOnly: true,
 		})),
 		...galleryFiles.map(({ filename, contentBase64 }) => ({
 			path: `src/assets/gallery/${filename}`,
 			content: contentBase64,
 			encoding: 'base64',
+			createOnly: true,
 		})),
 	];
 }
