@@ -1,9 +1,7 @@
 {
     "role": "Social Media Manager",
-    "name": "Livia",
+    "name": "Livia Caedo",
     "img": "/assets/execs/livia.jpg",
-    "degree": "Second Year Computer Science",
-    "description": "Enjoys drawing, playing volleyball, and travelling!!",
     "imgs": [
         {
             "path": "/assets/execs/livia.jpg",
@@ -17,5 +15,7 @@
             "path": "/assets/execs/livia-3.jpg",
             "alt": "Livia"
         }
-    ]
+    ],
+    "degree": "Second Year Computer Science",
+    "description": "Loves to collect hobbies! Enjoys drawing, playing volleyball, and skiing!"
 }
