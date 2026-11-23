@@ -1,7 +1,28 @@
 {
     "title": "Panel",
     "imgs": [
-        {"path": "/assets/events/panel.png", "alt": "animated git logo"}
+        {
+            "path": "/assets/events/panel.png",
+            "alt": "animated git logo"
+        },
+        {
+            "path": "/assets/events/1-git-speakers.jpg"
+        },
+        {
+            "path": "/assets/events/1-panel.jpg"
+        },
+        {
+            "path": "/assets/events/1-setup.jpg"
+        },
+        {
+            "path": "/assets/events/1-speakers.jpg"
+        },
+        {
+            "path": "/assets/events/2-git-speakers.jpg"
+        },
+        {
+            "path": "/assets/events/2-panel.jpg"
+        }
     ],
     "description": "Every year, we host a panel event that covers a variety of areas, from career pathways, dealing with struggles in the professional world, and many more relevant topics!",
     "date": "",
