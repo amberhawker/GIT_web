@@ -1,7 +1,13 @@
 {
     "title": "Stem Gala",
     "imgs": [
-        {"path": "/assets/events/stemgala.jpg", "alt": "animated git logo"}
+        {
+            "path": "/assets/events/stemgala.jpg",
+            "alt": "animated git logo"
+        },
+        {
+            "path": "/assets/events/img-0274.jpg"
+        }
     ],
     "description": "This Gala is geared towards networking, community building, and uplifting students in STEM. We invite researchers and other professionals to present their work too.",
     "date": "",
