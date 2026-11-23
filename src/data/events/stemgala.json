@@ -46,9 +46,15 @@
         },
         {
             "path": "/assets/events/dsc03860.jpg"
+        },
+        {
+            "path": "/assets/events/dsc03869.jpg"
+        },
+        {
+            "path": "/assets/events/dsc03870.jpg"
         }
     ],
     "description": "This Gala is geared towards networking, community building, and uplifting students in STEM. We invite researchers and other professionals to present their work too.",
     "date": "",
-    "featured": false
+    "featured": true
 }
