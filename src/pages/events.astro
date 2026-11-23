@@ -20,6 +20,7 @@ const allEvents = await getCollection("events");
             {allEvents.map((event) => (
                 <Event
                     eventTitle={event.data.title}
+                    eventDate={event.data.date}
                     imgs={event.data.imgs}
                     description={event.data.description}
                 />
