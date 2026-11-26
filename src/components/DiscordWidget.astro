@@ -56,12 +56,14 @@ const { serverId } = Astro.props;
 
 <script>
     interface DiscordWidgetData {
+        instant_invite?: string | null;
         presence_count: number;
         members: { username: string; avatar_url: string; status: string }[];
         channels: { name: string; position: number }[];
     }
 
     const memberLimit = 6;
+    const discordInvitePattern = /^https:\/\/(?:discord\.com\/invite\/|discord\.gg\/)[\w-]+\/?$/;
     const presence = new Map([
         ['online', { color: 'bg-emerald-500', label: 'Online' }],
         ['idle', { color: 'bg-amber-400', label: 'Idle' }],
@@ -78,6 +80,13 @@ const { serverId } = Astro.props;
             if (!response.ok) return;
 
             const data: DiscordWidgetData = await response.json();
+            const invite = data.instant_invite;
+            if (typeof invite === 'string' && discordInvitePattern.test(invite)) {
+                widget.closest('.contact-card')?.querySelectorAll('a').forEach((link) => {
+                    if (discordInvitePattern.test(link.href)) link.href = invite;
+                });
+            }
+
             if (!Number.isSafeInteger(data.presence_count) || data.presence_count < 0) return;
 
             const count = widget.querySelector<HTMLElement>('[data-online-count]')!;
