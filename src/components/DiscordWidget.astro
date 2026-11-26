@@ -4,19 +4,23 @@ interface Props {
 }
 
 const { serverId } = Astro.props;
+const framedEntry = 'border-2 border-base-content shadow-[2px_2px_0px_#3d0824]';
 ---
 
 <section data-discord-widget={serverId} hidden aria-label="Discord activity" class="mt-5 overflow-hidden rounded-xl border-2 border-base-content bg-base-200 shadow-[2px_2px_0px_#3d0824]">
-    <div class="flex items-start justify-between gap-2 border-b-2 border-base-content bg-base-100 px-3 py-2.5">
+    <div class="flex items-center justify-between gap-3 border-b-2 border-base-content bg-base-100 px-3 py-3">
         <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span class="flex items-center gap-1.5 font-mono text-xs font-bold">
                 <span aria-hidden="true" class="text-primary">✿</span>
                 discord.exe
             </span>
-            <span data-online-count class="rounded-full border border-base-content bg-[#D1FADF] px-2 py-0.5 font-mono text-[11px] font-bold"></span>
+            <span data-online-count class:list={[framedEntry, 'bg-[#D1FADF] px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider uppercase']}></span>
         </div>
-        <span aria-hidden="true" class="shrink-0 -rotate-6 rounded-sm border-4 border-double border-primary bg-base-200 px-1.5 py-0.5 font-mono text-[10px] leading-none font-bold tracking-wider text-primary uppercase sm:text-[11px]">
-            Newly Renovated!
+        <span aria-hidden="true" class="discord-stamp inline-flex shrink-0 -rotate-10 items-center gap-1.5 border-4 border-double border-current px-1.5 py-0.5 font-mono text-[10px] leading-none font-bold tracking-wider text-base-content uppercase sm:text-[11px]">
+            <svg class="size-4 shrink-0 fill-current" viewBox="0 0 24 24">
+                <path d="M12 0c0 8-4 12-12 12 8 0 12 4 12 12 0-8 4-12 12-12-8 0-12-4-12-12Z" />
+            </svg>
+            <span class="border-l border-current pl-1.5 text-center">Newly<br />Renovated!</span>
         </span>
     </div>
 
@@ -24,7 +28,7 @@ const { serverId } = Astro.props;
         <div data-members-section hidden>
             <div class="mb-2 flex flex-wrap items-center justify-between gap-1.5">
                 <h4 class="font-mono text-[11px] font-bold uppercase tracking-wider text-base-content/80">Members online</h4>
-                <span data-more-members class="rounded bg-base-100 px-1.5 py-0.5 font-mono text-[11px] font-bold" hidden></span>
+                <span data-more-members class:list={[framedEntry, 'bg-base-100 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider uppercase']} hidden></span>
             </div>
             <ul data-members role="list" class="grid grid-cols-2 gap-2 xl:grid-cols-3"></ul>
         </div>
@@ -36,11 +40,11 @@ const { serverId } = Astro.props;
     </div>
 
     <template data-member-template>
-        <li class="flex min-w-0 items-center gap-2 rounded-lg border border-base-content/30 bg-base-100 p-1.5">
+        <li class:list={[framedEntry, 'flex min-w-0 items-center gap-2 bg-base-100 p-1.5']}>
             <span class="relative shrink-0">
-                <span class="grid size-7 place-items-center overflow-hidden rounded-full border border-base-content bg-base-300 font-mono text-xs font-bold">
+                <span class="relative grid size-7 place-items-center overflow-hidden border-2 border-base-content bg-base-300 font-mono text-xs font-bold">
                     <span data-initial aria-hidden="true"></span>
-                    <img data-avatar hidden alt="" width="28" height="28" referrerpolicy="no-referrer" class="absolute inset-0 size-full rounded-full border border-base-content object-cover" />
+                    <img data-avatar hidden alt="" width="28" height="28" referrerpolicy="no-referrer" class="absolute inset-0 size-full object-cover" />
                 </span>
                 <span data-presence-dot aria-hidden="true" hidden class="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border border-base-content"></span>
             </span>
@@ -50,7 +54,7 @@ const { serverId } = Astro.props;
     </template>
 
     <template data-channel-template>
-        <li class="flex max-w-full items-center gap-1.5 rounded-full border border-base-content/40 bg-base-100 px-2 py-1 font-mono text-[11px]">
+        <li class:list={[framedEntry, 'flex max-w-full items-center gap-1.5 bg-base-100 px-2 py-1 font-mono text-[11px] font-bold']}>
             <svg aria-hidden="true" class="size-3.5 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 5 6 9H3v6h3l5 4V5Zm4 4a4 4 0 0 1 0 6m3-9a8 8 0 0 1 0 12" />
             </svg>
@@ -58,6 +62,12 @@ const { serverId } = Astro.props;
         </li>
     </template>
 </section>
+
+<style>
+    .discord-stamp {
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='24'%3E%3Cpath fill-rule='evenodd' d='M0 0h32v24H0z M2 1l3 1-1 1-2-1z M10 2h2v1h-2z M19 0h2l-1 2h-1z M28 3l2-1v2h-2z M5 6h1v2H5z M14 7l3-1v1l-3 1z M23 5h2v1h-2z M0 10h2v1H0z M9 11h1v1H9z M20 10l2-1v2h-2z M29 12h2v1h-2z M4 16h2v1H4z M12 15l2 1-1 1h-1z M24 15h1v2h-1z M30 18h2v1h-2z M1 21h2v1H1z M8 20h2l-1 2H8z M17 22h2v1h-2z M26 20h2v1h-2z'/%3E%3C/svg%3E");
+    }
+</style>
 
 <script>
     interface DiscordWidgetData {
