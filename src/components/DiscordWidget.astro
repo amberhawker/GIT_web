@@ -1,0 +1,149 @@
+---
+interface Props {
+    serverId: string;
+}
+
+const { serverId } = Astro.props;
+---
+
+<section data-discord-widget={serverId} hidden aria-label="Discord activity" class="mt-5 overflow-hidden rounded-xl border-2 border-base-content bg-base-200 shadow-[2px_2px_0px_#3d0824]">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-base-content bg-base-100 px-3 py-2">
+        <span class="flex items-center gap-1.5 font-mono text-xs font-bold">
+            <span aria-hidden="true" class="text-primary">✿</span>
+            discord.exe
+        </span>
+        <span data-online-count class="rounded-full border border-base-content bg-[#D1FADF] px-2 py-0.5 font-mono text-[11px] font-bold"></span>
+    </div>
+
+    <div data-discord-details class="space-y-4 p-3 sm:p-4">
+        <div data-members-section hidden>
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-1.5">
+                <h4 class="font-mono text-[11px] font-bold uppercase tracking-wider text-base-content/80">Members online</h4>
+                <span data-more-members class="rounded bg-base-100 px-1.5 py-0.5 font-mono text-[11px] font-bold" hidden></span>
+            </div>
+            <ul data-members role="list" class="grid grid-cols-2 gap-2 xl:grid-cols-3"></ul>
+        </div>
+
+        <div data-channels-section hidden>
+            <h4 class="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-base-content/80">Voice channels</h4>
+            <ul data-channels role="list" class="flex flex-wrap gap-2"></ul>
+        </div>
+    </div>
+
+    <template data-member-template>
+        <li class="flex min-w-0 items-center gap-2 rounded-lg border border-base-content/30 bg-base-100 p-1.5">
+            <span class="relative shrink-0">
+                <span class="grid size-7 place-items-center overflow-hidden rounded-full border border-base-content bg-base-300 font-mono text-xs font-bold">
+                    <span data-initial aria-hidden="true"></span>
+                    <img data-avatar hidden alt="" width="28" height="28" referrerpolicy="no-referrer" class="absolute inset-0 size-full rounded-full border border-base-content object-cover" />
+                </span>
+                <span data-presence-dot aria-hidden="true" hidden class="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border border-base-content"></span>
+            </span>
+            <span data-username class="min-w-0 truncate font-mono text-[11px] font-bold"></span>
+            <span data-presence-label class="sr-only"></span>
+        </li>
+    </template>
+
+    <template data-channel-template>
+        <li class="flex max-w-full items-center gap-1.5 rounded-full border border-base-content/40 bg-base-100 px-2 py-1 font-mono text-[11px]">
+            <svg aria-hidden="true" class="size-3.5 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 5 6 9H3v6h3l5 4V5Zm4 4a4 4 0 0 1 0 6m3-9a8 8 0 0 1 0 12" />
+            </svg>
+            <span data-channel-name class="min-w-0 wrap-break-word"></span>
+        </li>
+    </template>
+</section>
+
+<script>
+    interface DiscordWidgetData {
+        presence_count: number;
+        members: { username: string; avatar_url: string; status: string }[];
+        channels: { name: string; position: number }[];
+    }
+
+    const memberLimit = 6;
+    const presence = new Map([
+        ['online', { color: 'bg-emerald-500', label: 'Online' }],
+        ['idle', { color: 'bg-amber-400', label: 'Idle' }],
+        ['dnd', { color: 'bg-rose-500', label: 'Do not disturb' }],
+    ]);
+    const initialized = new WeakSet<HTMLElement>();
+
+    async function loadDiscordWidget(widget: HTMLElement) {
+        try {
+            const response = await fetch(`https://discord.com/api/guilds/${widget.dataset.discordWidget}/widget.json`, {
+                credentials: 'omit',
+                signal: AbortSignal.timeout(5000),
+            });
+            if (!response.ok) return;
+
+            const data: DiscordWidgetData = await response.json();
+            if (!Number.isSafeInteger(data.presence_count) || data.presence_count < 0) return;
+
+            const count = widget.querySelector<HTMLElement>('[data-online-count]')!;
+            const members = widget.querySelector('[data-members]')!;
+            const memberTemplate = widget.querySelector<HTMLTemplateElement>('[data-member-template]')!;
+            const channels = widget.querySelector('[data-channels]')!;
+            const channelTemplate = widget.querySelector<HTMLTemplateElement>('[data-channel-template]')!;
+
+            count.textContent = `${data.presence_count.toLocaleString()} online`;
+
+            for (const member of data.members.slice(0, memberLimit)) {
+                const entry = memberTemplate.content.cloneNode(true) as DocumentFragment;
+                const name = entry.querySelector<HTMLElement>('[data-username]')!;
+                name.textContent = member.username;
+                name.title = member.username;
+                entry.querySelector('[data-initial]')!.textContent = Array.from(member.username)[0]?.toUpperCase() ?? '';
+
+                const avatar = entry.querySelector<HTMLImageElement>('[data-avatar]')!;
+                if (member.avatar_url?.startsWith('https://cdn.discordapp.com/')) {
+                    avatar.addEventListener('error', () => { avatar.hidden = true; }, { once: true });
+                    avatar.src = member.avatar_url;
+                    avatar.hidden = false;
+                }
+
+                const status = presence.get(member.status);
+                if (status) {
+                    const dot = entry.querySelector<HTMLElement>('[data-presence-dot]')!;
+                    dot.classList.add(status.color);
+                    dot.hidden = false;
+                    entry.querySelector('[data-presence-label]')!.textContent = status.label;
+                }
+                members.append(entry);
+            }
+
+            const remaining = data.presence_count - members.childElementCount;
+            if (remaining > 0 && members.childElementCount > 0) {
+                const moreMembers = widget.querySelector<HTMLElement>('[data-more-members]')!;
+                moreMembers.textContent = `+${remaining.toLocaleString()} more`;
+                moreMembers.hidden = false;
+            }
+
+            for (const channel of [...data.channels].sort((a, b) => a.position - b.position)) {
+                const entry = channelTemplate.content.cloneNode(true) as DocumentFragment;
+                entry.querySelector('[data-channel-name]')!.textContent = channel.name;
+                channels.append(entry);
+            }
+
+            const hasMembers = members.childElementCount > 0;
+            const hasChannels = channels.childElementCount > 0;
+            widget.querySelector<HTMLElement>('[data-members-section]')!.hidden = !hasMembers;
+            widget.querySelector<HTMLElement>('[data-channels-section]')!.hidden = !hasChannels;
+            widget.querySelector<HTMLElement>('[data-discord-details]')!.hidden = !hasMembers && !hasChannels;
+            widget.hidden = false;
+        } catch {
+            return;
+        }
+    }
+
+    function setupDiscordWidgets() {
+        for (const widget of document.querySelectorAll<HTMLElement>('[data-discord-widget]')) {
+            if (initialized.has(widget)) continue;
+            initialized.add(widget);
+            void loadDiscordWidget(widget);
+        }
+    }
+
+    setupDiscordWidgets();
+    document.addEventListener('astro:page-load', setupDiscordWidgets);
+</script>

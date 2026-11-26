@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import Layout from '../layouts/Layout.astro';
+import DiscordWidget from '../components/DiscordWidget.astro';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import facebookIcon from '../assets/icons/facebook.png';
@@ -250,28 +251,7 @@ const getSocialMeta = (id: string) => {
                                     </a>
                                 </div>
                                 {link.data.discordServerId && (
-                                    <div id="discord-widget" class="mt-5 scroll-mt-24 overflow-hidden rounded-xl border-2 border-base-content bg-base-200 shadow-[2px_2px_0px_#3d0824]">
-                                        <div class="flex items-center justify-between gap-2 border-b-2 border-base-content bg-[#e4ddff] px-3 py-2 text-base-content">
-                                            <span class="font-mono text-xs font-bold">discord.exe</span>
-                                            <span aria-hidden="true" class="flex items-center gap-1.5">
-                                                <span class="size-2 rounded-full border border-base-content bg-base-300"></span>
-                                                <span class="size-2 rounded-full border border-base-content bg-base-100"></span>
-                                                <span class="text-sm leading-none">✿</span>
-                                            </span>
-                                        </div>
-                                        <div class="px-2 py-3 sm:p-4">
-                                            <iframe
-                                                src={`https://discord.com/widget?id=${link.data.discordServerId}&theme=dark`}
-                                                title="Girls in Tech Discord server"
-                                                width="350"
-                                                height="500"
-                                                loading="lazy"
-                                                allowtransparency="true"
-                                                sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                                                class="mx-auto block w-full max-w-[350px] rounded-lg border-0"
-                                            ></iframe>
-                                        </div>
-                                    </div>
+                                    <DiscordWidget serverId={link.data.discordServerId} />
                                 )}
                             </div>
                         );
