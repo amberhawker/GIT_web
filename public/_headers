@@ -1,7 +1,7 @@
 # Workers Static Assets headers for prerendered pages and static files.
 # Worker-rendered routes (/admin, /api/*) get the same headers from src/lib/security.ts.
 /*
-  Strict-Transport-Security: max-age=31536000
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
