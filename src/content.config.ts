@@ -48,6 +48,7 @@ const links = defineCollection({
     schema: z.object({
         id: z.string(),
         href: z.string(),
+        discordServerId: z.string().regex(/^\d+$/).optional(),
         ico: z.object({
             src: z.string(),
             bg: z.string()
