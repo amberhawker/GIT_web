@@ -12,8 +12,7 @@ export const SECURITY_HEADERS: Record<string, string> = {
 	'Content-Security-Policy': "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'",
 };
 
-/** 1 year. Add `includeSubDomains; preload` only once every subdomain is HTTPS-only. */
-export const HSTS_VALUE = 'max-age=31536000';
+export const HSTS_VALUE = 'max-age=31536000; includeSubDomains';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
 
