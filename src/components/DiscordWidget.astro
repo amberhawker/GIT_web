@@ -8,13 +8,13 @@ const framedEntry = 'border-2 border-base-content shadow-[2px_2px_0px_#3d0824]';
 ---
 
 <section data-discord-widget={serverId} hidden aria-label="Discord activity" class="mt-5 overflow-hidden rounded-xl border-2 border-base-content bg-base-200 shadow-[2px_2px_0px_#3d0824]">
-    <div class="flex items-center justify-between gap-3 border-b-2 border-base-content bg-base-100 px-3 py-3">
-        <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <span class="flex items-center gap-1.5 font-mono text-xs font-bold">
+    <div class="flex items-center justify-between gap-3 border-b-2 border-base-content bg-base-100 px-3 py-3.5 sm:px-4">
+        <div class="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-2">
+            <span class="flex shrink-0 items-center gap-1.5 font-mono text-xs font-bold">
                 <span aria-hidden="true" class="text-primary">✿</span>
                 discord.exe
             </span>
-            <span data-online-count class:list={[framedEntry, 'bg-[#D1FADF] px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider uppercase']}></span>
+            <span data-online-count class="border border-base-content/25 bg-[#D1FADF] px-1.5 py-0.5 font-mono text-[10px] leading-tight font-bold tracking-wide whitespace-nowrap uppercase"></span>
         </div>
         <span aria-hidden="true" class="discord-stamp inline-flex shrink-0 -rotate-10 items-center gap-1.5 border-4 border-double border-current px-1.5 py-0.5 font-mono text-[10px] leading-none font-bold tracking-wider text-base-content uppercase sm:text-[11px]">
             <svg class="size-4 shrink-0 fill-current" viewBox="0 0 24 24">
