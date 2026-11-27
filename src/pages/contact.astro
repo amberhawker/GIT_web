@@ -251,7 +251,7 @@ const getSocialMeta = (id: string) => {
                                     </a>
                                 </div>
                                 {link.data.discordServerId && (
-                                    <DiscordWidget />
+                                    <DiscordWidget serverId={link.data.discordServerId} />
                                 )}
                             </div>
                         );
